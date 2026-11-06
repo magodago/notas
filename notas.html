@@ -574,6 +574,7 @@
   }
 
   let temporizadorTexto = null;
+  let notaPendiente = null;
   let ultimoTexto = '';
 
   /* Lo que se escribe en la libreta viaja al puente: la app de Musica lo lee
@@ -612,7 +613,8 @@
       nota.cuerpo = ec.textContent || '';
       guardarNotas();
       clearTimeout(temporizadorTexto);
-      temporizadorTexto = setTimeout(() => enviarTexto(nota), 900);
+      notaPendiente = nota;
+      temporizadorTexto = setTimeout(() => { if (notaPendiente) { enviarTexto(notaPendiente); notaPendiente = null; } }, 4000);
     }
     et.addEventListener('focus', () => {
       if (et.classList.contains('vacio')) { et.textContent = ''; et.classList.remove('vacio'); }
@@ -631,6 +633,7 @@
   }
 
   function mostrarLista() {
+    if (notaPendiente) { clearTimeout(temporizadorTexto); enviarTexto(notaPendiente); notaPendiente = null; }
     notaAbierta = null;
     $('#p-nota').hidden = true;
     $('#p-lista').hidden = false;
