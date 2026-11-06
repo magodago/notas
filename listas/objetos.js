@@ -101,6 +101,7 @@ window.LISTAS.objetos = {
     'Un salvavidas',
     'Un sextante',
     'Un catalejo',
-    'Una cantimplora'
+    'Una cantimplora',
+    'Un reloj de arena'
   ]
 };

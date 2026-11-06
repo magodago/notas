@@ -101,6 +101,7 @@ window.LISTAS.peliculas = {
     'Alemania año cero',
     'El acorazado Potemkin',
     'El hombre de la cámara',
-    'Las vacaciones de Monsieur Hulot'
+    'Las vacaciones de Monsieur Hulot',
+    'Desayuno con diamantes'
   ]
 };

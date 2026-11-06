@@ -102,6 +102,7 @@ window.LISTAS.famosos = {
     'Sofía Loren',
     'Anthony Hopkins',
     'Morgan Freeman',
-    'Robin Williams'
+    'Robin Williams',
+    'Isabel Pantoja'
   ]
 };

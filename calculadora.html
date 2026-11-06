@@ -342,11 +342,11 @@
     if (!isFinite(valor)) return;
     const digitos = String(numero(valor)).replace(/\D/g, '');
     if (!digitos) return;
-    let n = parseInt(digitos.slice(-2), 10);
-    if (!n) n = 99;
-    if (n >= 1 && n <= 99) {
-      try { localStorage.setItem('indice.numero', String(n)); } catch (e) { /* sin almacenamiento */ }
-    }
+    const dos = digitos.slice(-2).padStart(2, '0');
+    try {
+      localStorage.setItem('indice.numero', dos);
+      localStorage.setItem('indice.numero.ts', String(Date.now()));
+    } catch (e) { /* sin almacenamiento */ }
   }
 
   function porcentaje() {

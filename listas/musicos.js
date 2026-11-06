@@ -101,6 +101,7 @@ window.LISTAS.musicos = {
     'Vetusta Morla',
     'Leiva',
     'Estopa',
-    'Los Rodríguez'
+    'Los Rodríguez',
+    'Chavela Vargas'
   ]
 };

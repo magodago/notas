@@ -291,7 +291,7 @@
 
     <div class="grupo-tit">Forzado por lista</div>
     <div class="grupo" id="grupo-listas"></div>
-    <div class="nota-pie">El ítem elegido se coloca en el número en juego. El que estaba ahí pasa a su posición: la lista sigue teniendo 99 nombres distintos.</div>
+    <div class="nota-pie">El ítem elegido se coloca en el número en juego. El que estaba ahí pasa a su posición: la lista sigue teniendo 100 nombres distintos, del 00 al 99.</div>
 
     <div class="grupo-tit">Estado</div>
     <div class="grupo">
@@ -300,6 +300,12 @@
       </button>
     </div>
     <div class="nota-pie" id="pie-estado"></div>
+
+    <div class="grupo-tit">App</div>
+    <div class="grupo">
+      <button class="g-fila" id="actualizar">Forzar actualización <span class="valor" id="version-app">v4</span></button>
+    </div>
+    <div class="nota-pie" id="pie-diag"></div>
   </div>
 </section>
 
@@ -316,6 +322,48 @@
       <input id="buscar-item" type="search" placeholder="Buscar" autocomplete="off" spellcheck="false">
     </div>
     <div class="grupo" id="lista-items"></div>
+  </div>
+</section>
+
+<!-- ============ teclado del número (pulsación larga en «...») ============ -->
+<section class="hoja" id="hoja-num" hidden>
+  <style>
+    #hoja-num { top: auto; bottom: 0; max-height: 80vh; border-radius: 14px 14px 0 0; box-shadow: 0 -1px 0 rgba(255,255,255,.06); }
+    #hoja-num .num-cuerpo { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; padding: 10px 16px calc(24px + env(safe-area-inset-bottom)); }
+    #hoja-num .num-valor {
+      font-size: 54px; font-weight: 300; letter-spacing: 3px; line-height: 1.1;
+      margin: 0 0 16px; font-variant-numeric: tabular-nums; color: var(--texto);
+    }
+    #hoja-num .num-malla { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 330px; }
+    #hoja-num .num-malla button {
+      height: 56px; border-radius: 12px; background: #1c1c1e; color: var(--texto);
+      font: 400 26px/1 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+    #hoja-num .num-malla button:active { background: #2f2f31; }
+    #hoja-num .num-accion { color: var(--texto-2); font-size: 21px; }
+  </style>
+  <div class="hoja-cab">
+    <button class="ok" id="cerrar-num">Cancelar</button>
+    <span class="tit">Número</span>
+    <span style="width:56px"></span>
+  </div>
+  <div class="num-cuerpo">
+    <div class="num-valor" id="num-valor">--</div>
+    <div class="num-malla" id="num-malla">
+      <button data-num="1">1</button>
+      <button data-num="2">2</button>
+      <button data-num="3">3</button>
+      <button data-num="4">4</button>
+      <button data-num="5">5</button>
+      <button data-num="6">6</button>
+      <button data-num="7">7</button>
+      <button data-num="8">8</button>
+      <button data-num="9">9</button>
+      <button data-num="borrar" class="num-accion">⌫</button>
+      <button data-num="0">0</button>
+      <button data-num="ok" class="num-accion">✓</button>
+    </div>
   </div>
 </section>
 
@@ -353,12 +401,16 @@
   const guardarCfg = () => { try { localStorage.setItem(CLAVE_CFG, JSON.stringify(cfg)); } catch (e) {} };
 
   function numeroDetectado() {
-    const n = parseInt(localStorage.getItem(CLAVE_NUM) || '', 10);
-    return (n >= 1 && n <= 99) ? n : null;
+    let crudo = null;
+    try { crudo = localStorage.getItem(CLAVE_NUM); } catch (e) { return null; }
+    if (crudo == null || crudo === '') return null;
+    const digitos = String(crudo).replace(/\D/g, '');
+    if (!digitos) return null;
+    return digitos.slice(-2).padStart(2, '0');
   }
   function numeroEnJuego() {
-    const manual = parseInt(cfg.manual, 10);
-    if (manual >= 1 && manual <= 99) return manual;
+    const manual = String(cfg.manual == null ? '' : cfg.manual).replace(/\D/g, '');
+    if (manual !== '' && manual.length <= 2) return manual.padStart(2, '0');
     return numeroDetectado();
   }
 
@@ -392,10 +444,10 @@
     const items = lista.items.slice();
     const forzado = cfg.forzados[clave];
     const n = numeroEnJuego();
-    if (!cfg.activo || !forzado || !n) return items;
+    if (!cfg.activo || !forzado || n === null) return items;
     const destino = items.indexOf(forzado);
-    const origen = n - 1;
-    if (destino < 0 || origen < 0 || origen >= items.length) return items;
+    const origen = parseInt(n, 10);
+    if (destino < 0 || isNaN(origen) || origen < 0 || origen >= items.length) return items;
     if (destino === origen) return items;
     items[origen] = forzado;
     items[destino] = lista.items[origen];
@@ -469,7 +521,7 @@
   function abrirLista(clave) {
     const lista = window.LISTAS[clave];
     const items = entradasDe(clave);
-    const lineas = items.map((t, i) => (i + 1) + '. ' + t).join('\n');
+    const lineas = items.map((t, i) => String(i).padStart(2, '0') + '. ' + t).join('\n');
     notaAbierta = { tipo: 'lista', clave: clave };
     $('#nota-fecha').textContent = fechaLarga(HOY);
     $('#nota-cuerpo').innerHTML = '<span class="titulo">' + escapar(lista.titulo) + '</span>'
@@ -496,6 +548,7 @@
   }
 
   function mostrarLista() {
+    notaAbierta = null;
     $('#p-nota').hidden = true;
     $('#p-lista').hidden = false;
     pintarLista();
@@ -509,8 +562,9 @@
 
   function pintarAjustes() {
     const n = numeroEnJuego();
+    const det = numeroDetectado();
     $('#num-manual').value = cfg.manual || '';
-    $('#num-detectado').textContent = numeroDetectado() ? numeroDetectado() : '--';
+    $('#num-detectado').textContent = det || '--';
     const filas = Object.keys(window.LISTAS).map((clave) => {
       const valor = cfg.forzados[clave] || 'Sin forzar';
       return '<button class="g-fila" data-forzar="' + clave + '">' + escapar(window.LISTAS[clave].titulo)
@@ -523,12 +577,16 @@
     $('#fila-activo').setAttribute('aria-checked', cfg.activo ? 'true' : 'false');
 
     const estado = [];
-    estado.push(n ? 'Número en juego: ' + n : 'Sin número: haz un cálculo o escríbelo arriba.');
+    estado.push(n ? 'Número en juego: ' + n + '.' : 'Sin número: haz un cálculo o escríbelo arriba.');
     const sinForzar = Object.keys(window.LISTAS).filter((k) => !cfg.forzados[k]);
     if (sinForzar.length) {
       estado.push('Sin forzar: ' + sinForzar.map((k) => window.LISTAS[k].titulo).join(', ') + '.');
     }
     $('#pie-estado').textContent = estado.join(' ');
+
+    $('#pie-diag').textContent = det
+      ? 'Calculadora: ' + det + '. El número llega solo.'
+      : 'Calculadora: sin datos. iOS guarda cada app instalada en su propia memoria, así que el número no viaja entre las dos. Mantén pulsado «...» en la lista y escríbelo.';
   }
 
   let clavePicker = null;
@@ -558,6 +616,58 @@
     });
     $('#lista-items').innerHTML = html;
   }
+
+  /* ---------- teclado rápido del número ---------- */
+  let numBuf = '';
+
+  function pintarNum() { $('#num-valor').textContent = numBuf || '--'; }
+  function abrirNum() { numBuf = ''; pintarNum(); $('#hoja-num').hidden = false; }
+
+  function aplicarNum() {
+    const v = numBuf;
+    numBuf = '';
+    $('#hoja-num').hidden = true;
+    if (!v) return;
+    cfg.manual = v.padStart(2, '0');
+    cfg.activo = true;
+    guardarCfg();
+    pintarAjustes();
+    if (notaAbierta && notaAbierta.tipo === 'lista') abrirLista(notaAbierta.clave);
+    else pintarLista();
+  }
+
+  function pulsarNum(txt) {
+    if (txt === 'borrar') { numBuf = numBuf.slice(0, -1); pintarNum(); return; }
+    if (txt === 'ok') { aplicarNum(); return; }
+    if (numBuf.length >= 2) numBuf = '';
+    numBuf += txt;
+    pintarNum();
+    if (numBuf.length === 2) setTimeout(aplicarNum, 180);
+  }
+
+  $('#cerrar-num').addEventListener('click', () => { numBuf = ''; $('#hoja-num').hidden = true; });
+  $('#num-malla').addEventListener('click', (evento) => {
+    const boton = evento.target.closest('[data-num]');
+    if (boton) pulsarNum(boton.dataset.num);
+  });
+
+  /* Pulsación larga en «...»: teclado de dos cifras, sin abrir los ajustes. */
+  (function atajoNumero() {
+    const boton = $('#btn-menu');
+    let temporizador = null;
+    let largo = false;
+    ['pointerdown', 'touchstart'].forEach((tipo) => boton.addEventListener(tipo, () => {
+      largo = false;
+      clearTimeout(temporizador);
+      temporizador = setTimeout(() => { temporizador = null; largo = true; abrirNum(); }, 550);
+    }, { passive: true }));
+    ['pointerup', 'pointercancel', 'pointerleave', 'touchend', 'touchcancel'].forEach((tipo) => {
+      boton.addEventListener(tipo, () => {
+        if (temporizador) { clearTimeout(temporizador); temporizador = null; }
+      });
+    });
+    boton.addEventListener('click', (evento) => { if (largo) { largo = false; evento.preventDefault(); } });
+  })();
 
   /* ---------- gesto oculto ---------- */
   (function gestoOculto() {
@@ -648,9 +758,21 @@
     pintarAjustes();
   });
 
+  $('#actualizar').addEventListener('click', async () => {
+    try {
+      const registros = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registros.map((r) => r.unregister()));
+      const claves = await caches.keys();
+      await Promise.all(claves.map((k) => caches.delete(k)));
+    } catch (e) { /* sin service worker */ }
+    location.replace(location.pathname + '?v=' + Date.now());
+  });
+
   // El número puede cambiar en la calculadora mientras la app está abierta.
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) pintarAjustes();
+    if (document.hidden) return;
+    if (!$('#p-lista').hidden) pintarLista();
+    if (!$('#hoja-ajustes').hidden) pintarAjustes();
   });
 
   pintarLista();
