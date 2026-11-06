@@ -1,11 +1,14 @@
 /* Service worker: la app tiene que funcionar en modo avión, en escena.
    HTML: red primero (para recibir cambios), caché como respaldo.
    Resto: caché primero. */
-const CACHE = 'indice-v2';
+const CACHE = 'indice-v3';
 const ARCHIVOS = [
   './notas.html',
   './calculadora.html',
-  './data.js',
+  './listas/famosos.js',
+  './listas/peliculas.js',
+  './listas/objetos.js',
+  './listas/musicos.js',
   './notas.webmanifest',
   './calculadora.webmanifest',
   './notas-icon.png',
@@ -13,7 +16,12 @@ const ARCHIVOS = [
 ];
 
 self.addEventListener('install', (evento) => {
-  evento.waitUntil(caches.open(CACHE).then((c) => c.addAll(ARCHIVOS)).then(() => self.skipWaiting()));
+  evento.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(ARCHIVOS))
+      .then(() => self.skipWaiting())
+      .catch(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (evento) => {
@@ -28,14 +36,14 @@ self.addEventListener('fetch', (evento) => {
   const peticion = evento.request;
   if (peticion.method !== 'GET') return;
 
-  const esHtml = peticion.mode === 'navigate' || /\.html(\?|$)/.test(new URL(peticion.url).pathname);
+  const esHtml = peticion.mode === 'navigate' || /\.html$/i.test(new URL(peticion.url).pathname);
 
   if (esHtml) {
     evento.respondWith(
       fetch(peticion)
         .then((respuesta) => {
           const copia = respuesta.clone();
-          caches.open(CACHE).then((c) => c.put(peticion, copia));
+          caches.open(CACHE).then((c) => c.put(peticion, copia)).catch(() => {});
           return respuesta;
         })
         .catch(() => caches.match(peticion).then((r) => r || caches.match('./notas.html')))
@@ -44,10 +52,10 @@ self.addEventListener('fetch', (evento) => {
   }
 
   evento.respondWith(
-    caches.match(peticion).then((guardada) => guardada || fetch(peticion).then((respuesta) => {
+    caches.match(peticion).then((cacheado) => cacheado || fetch(peticion).then((respuesta) => {
       const copia = respuesta.clone();
-      caches.open(CACHE).then((c) => c.put(peticion, copia));
+      caches.open(CACHE).then((c) => c.put(peticion, copia)).catch(() => {});
       return respuesta;
-    }))
+    }).catch(() => cacheado))
   );
 });

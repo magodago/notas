@@ -333,6 +333,20 @@
     hecho = true;
     ultimaExpresion = expresion;
     guardarHistorial(expresion, total);
+    guardarNumeroJuego(total);
+  }
+
+  /* Las dos últimas cifras del resultado son el número que se juega en la libreta.
+     Si acaba en 00 se devuelve 99: en la lista no existe el cero. */
+  function guardarNumeroJuego(valor) {
+    if (!isFinite(valor)) return;
+    const digitos = String(numero(valor)).replace(/\D/g, '');
+    if (!digitos) return;
+    let n = parseInt(digitos.slice(-2), 10);
+    if (!n) n = 99;
+    if (n >= 1 && n <= 99) {
+      try { localStorage.setItem('indice.numero', String(n)); } catch (e) { /* sin almacenamiento */ }
+    }
   }
 
   function porcentaje() {

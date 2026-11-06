@@ -4,674 +4,662 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Notas</title>
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Notas">
+<meta name="theme-color" content="#000000">
 <link rel="manifest" href="notas.webmanifest">
 <link rel="apple-touch-icon" href="notas-icon.png">
 <link rel="icon" href="notas-icon.png">
 <style>
   :root {
-    --bg: #ffffff;
-    --bg-grupo: #f2f2f7;
-    --bg-campo: #e9e9eb;
-    --texto: #000000;
-    --texto-2: #8a8a8e;
-    --sep: rgba(60, 60, 67, .29);
-    --sep-suave: rgba(60, 60, 67, .16);
-    --amarillo: #ffb300;
-    --azul: #007aff;
-    --tarjeta: #ffffff;
-    --sombra: 0 -1px 12px rgba(0, 0, 0, .06);
-    /* Métricas del sistema: safe areas reales del iPhone */
-    --s-top: env(safe-area-inset-top, 0px);
-    --s-bot: env(safe-area-inset-bottom, 0px);
+    --bg: #000000;
+    --tarjeta: #1c1c1e;
+    --sep: #2c2c2e;
+    --texto: #ffffff;
+    --texto-2: #8e8e93;
+    --texto-3: #98989d;
+    --campo: #1c1c1e;
+    --acento: #0a84ff;
+    --s-arriba: env(safe-area-inset-top, 0px);
+    --s-abajo: env(safe-area-inset-bottom, 0px);
   }
-  @media (prefers-color-scheme: dark) {
+  @media (prefers-color-scheme: light) {
     :root {
-      --bg: #000000;
-      --bg-grupo: #1c1c1e;
-      --bg-campo: #1c1c1e;
-      --texto: #ffffff;
-      --texto-2: #8e8e93;
-      --sep: rgba(84, 84, 88, .65);
-      --sep-suave: rgba(84, 84, 88, .45);
-      --tarjeta: #1c1c1e;
-      --sombra: 0 -1px 12px rgba(0, 0, 0, .5);
+      --bg: #ffffff;
+      --tarjeta: #f2f2f7;
+      --sep: #d1d1d6;
+      --texto: #000000;
+      --texto-2: #8a8a8e;
+      --texto-3: #6c6c70;
+      --campo: #e9e9eb;
     }
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body {
-    margin: 0; height: 100%;
-    background: var(--bg); color: var(--texto);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -webkit-text-size-adjust: 100%; -webkit-user-select: none; user-select: none;
-    overscroll-behavior: none;
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    color: var(--texto); -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility; overscroll-behavior: none;
   }
-  button, input, textarea { font: inherit; color: inherit; }
-  button { border: 0; background: none; padding: 0; margin: 0; text-align: left; }
-  svg { display: block; }
-
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
   .pantalla {
-    position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    position: fixed; inset: 0; display: flex; flex-direction: column;
     background: var(--bg);
-    padding-bottom: calc(var(--s-bot) + 24px);
   }
   .pantalla[hidden] { display: none; }
 
-  /* ---------- Barra superior ---------- */
+  /* ---------------- cabecera ---------------- */
   .barra {
-    position: sticky; top: 0; z-index: 5;
-    padding: calc(var(--s-top) + 6px) 16px 8px;
-    background: var(--bg);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: calc(var(--s-arriba) + 8px) 16px 6px; gap: 8px;
+    background: var(--bg); position: relative; z-index: 3;
   }
-  .barra.fina { padding: calc(var(--s-top) + 4px) 8px 6px; display: flex; align-items: center; justify-content: space-between; }
-  .grande {
-    margin: 0 0 10px; font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -.6px;
+  .circulo {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--tarjeta);
+    display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
   }
-  .volver {
-    display: flex; align-items: center; gap: 4px;
-    min-height: 44px; padding: 0 6px; color: var(--amarillo); font-size: 17px; letter-spacing: -.2px;
+  .circulo:active { opacity: .6; }
+  .circulo svg { width: 20px; height: 20px; display: block; }
+  .titulo-cab { text-align: center; flex: 1 1 auto; min-width: 0; }
+  .titulo-cab .t1 {
+    font-size: 17px; font-weight: 600; letter-spacing: -.4px; line-height: 21px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    -webkit-user-select: none; user-select: none;
   }
-  .volver:active { opacity: .5; }
-  .volver svg { width: 12px; height: 20px; }
-  .accion-barra { min-height: 44px; padding: 0 10px; color: var(--amarillo); font-size: 17px; }
-  .accion-barra:active { opacity: .5; }
+  .titulo-cab .t2 { font-size: 12px; color: var(--texto-2); line-height: 16px; letter-spacing: -.1px; }
 
-  /* ---------- Buscador ---------- */
-  .buscar {
-    display: flex; align-items: center; gap: 6px;
-    height: 36px; padding: 0 8px; border-radius: 10px; background: var(--bg-campo);
-    color: var(--texto-2);
+  .contenido { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 108px; }
+  .sec-cab {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 8px; font-size: 22px; font-weight: 700; letter-spacing: -.5px;
   }
-  .buscar svg { width: 15px; height: 15px; flex: none; }
-  .buscar input {
-    flex: 1; min-width: 0; border: 0; background: none; outline: none;
-    font-size: 17px; color: var(--texto); -webkit-user-select: text; user-select: text;
+  .sec-cab svg { width: 16px; height: 16px; color: var(--texto-2); }
+  .sec-cab2 { font-size: 17px; font-weight: 600; padding-top: 18px; }
+  .tarjeta {
+    margin: 0 16px 8px; background: var(--tarjeta); border-radius: 12px; overflow: hidden;
   }
-  .buscar input::placeholder { color: var(--texto-2); }
-
-  /* ---------- Grupos y filas ---------- */
-  .grupo-tit {
-    padding: 10px 16px 6px; background: var(--bg-grupo);
-    font-size: 13px; line-height: 18px; font-weight: 600; color: var(--texto-2);
-    letter-spacing: -.06px;
-  }
-  .filas { background: var(--bg); }
-  .fila { display: block; width: 100%; padding: 10px 16px; position: relative; }
-  .fila:active { background: var(--bg-grupo); }
+  .fila { display: block; width: 100%; text-align: left; padding: 9px 16px 10px; position: relative; }
+  .fila:active { background: rgba(120,120,128,.14); }
   .fila + .fila::before {
     content: ""; position: absolute; top: 0; left: 16px; right: 0;
-    height: .5px; background: var(--sep-suave);
+    height: .5px; background: var(--sep);
   }
   .fila-titulo {
-    font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -.35px;
+    font-size: 17px; font-weight: 600; letter-spacing: -.4px; line-height: 22px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fila-meta {
-    display: flex; gap: 6px; font-size: 14px; line-height: 19px; color: var(--texto-2);
-    white-space: nowrap; overflow: hidden;
+    font-size: 15px; line-height: 20px; color: var(--texto-2); letter-spacing: -.2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .fila-meta .recorte { overflow: hidden; text-overflow: ellipsis; }
-  .separador { height: .5px; background: var(--sep-suave); margin-left: 16px; }
-  .vacio { padding: 40px 24px; text-align: center; color: var(--texto-2); font-size: 15px; }
-
-  /* ---------- Botón componer ---------- */
-  .componer {
-    position: fixed; right: 16px; bottom: calc(var(--s-bot) + 16px); z-index: 6;
-    width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
-    color: var(--amarillo);
+  .fila-meta .fecha { color: var(--texto-2); }
+  .fila-carpeta {
+    display: flex; align-items: center; gap: 5px; margin-top: 1px;
+    font-size: 13px; line-height: 18px; color: var(--texto-2);
   }
-  .componer:active { opacity: .5; }
-  .componer svg { width: 30px; height: 30px; }
+  .fila-carpeta svg { width: 14px; height: 14px; flex: 0 0 auto; }
 
-  /* ---------- Detalle de nota ---------- */
-  .detalle { padding: 0 16px calc(var(--s-bot) + 40px); }
-  .fecha-nota { padding: 4px 0 14px; text-align: center; font-size: 13px; line-height: 18px; color: var(--texto-2); }
-  .titulo-nota, .cuerpo-nota {
-    display: block; width: 100%; border: 0; background: none; outline: none; resize: none;
+  /* ---------------- flotante inferior ---------------- */
+  .flotante {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px calc(var(--s-abajo) + 8px);
+    background: linear-gradient(to top, var(--bg) 62%, transparent);
+  }
+  .buscador {
+    flex: 1 1 auto; display: flex; align-items: center; gap: 6px;
+    height: 44px; padding: 0 12px; border-radius: 22px; background: var(--campo);
+  }
+  .buscador svg { width: 17px; height: 17px; color: var(--texto-2); flex: 0 0 auto; }
+  .buscador input {
+    flex: 1 1 auto; min-width: 0; border: 0; outline: 0; background: none;
+    font: inherit; font-size: 17px; color: var(--texto); letter-spacing: -.2px;
+  }
+  .buscador input::placeholder { color: var(--texto-2); }
+
+  /* ---------------- nota ---------------- */
+  .barra-nota { padding-bottom: 10px; }
+  .pildora {
+    display: flex; align-items: center; gap: 14px; height: 44px;
+    padding: 0 16px; border-radius: 22px; background: var(--tarjeta);
+  }
+  .pildora svg { width: 19px; height: 19px; }
+  .pildora .sep { width: .5px; height: 22px; background: var(--texto-2); opacity: .45; }
+  .contenido-nota { padding: 4px 16px 120px; }
+  .fecha-nota {
+    text-align: center; font-size: 13px; color: var(--texto-2); margin-bottom: 12px;
+    letter-spacing: -.1px;
+  }
+  .cuerpo-nota {
+    font-size: 17px; line-height: 23px; letter-spacing: -.3px;
+    white-space: pre-wrap; word-break: break-word; outline: none;
     -webkit-user-select: text; user-select: text;
   }
-  .titulo-nota {
-    font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -.5px;
-    padding: 0 0 6px;
+  .cuerpo-nota .titulo {
+    display: block; font-size: 22px; font-weight: 700; line-height: 28px;
+    letter-spacing: -.5px; margin-bottom: 10px;
   }
-  .cuerpo-nota { font-size: 17px; line-height: 24px; min-height: 55vh; letter-spacing: -.2px; }
-  .papel { font-size: 17px; line-height: 24px; letter-spacing: -.2px; white-space: pre-wrap; }
-  .categoria {
-    margin: 0 0 2px; font-size: 15px; line-height: 20px; color: var(--texto-2);
+  .pie {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px calc(var(--s-abajo) + 8px);
+    background: linear-gradient(to top, var(--bg) 62%, transparent);
   }
-  .referencia { margin: 14px 0 0; font-size: 13px; line-height: 18px; color: var(--texto-2); }
+  .pildora-herramientas { gap: 18px; }
 
-  /* ---------- Índice 1–100 ---------- */
-  .rejilla {
-    display: grid; grid-template-columns: repeat(10, 1fr);
-    gap: 1px; margin: 0 12px; background: var(--sep-suave);
-    border: .5px solid var(--sep-suave); border-radius: 10px; overflow: hidden;
-  }
-  .celda {
-    display: flex; align-items: center; justify-content: center;
-    height: 40px; background: var(--bg); font-size: 13px; font-weight: 500;
-    font-variant-numeric: tabular-nums; letter-spacing: -.3px;
-  }
-  .celda:active { background: var(--bg-grupo); }
-  .celda.marcada { color: var(--texto-2); }
-  .indice-cab { padding: 0 16px 12px; font-size: 13px; line-height: 18px; color: var(--texto-2); }
-
-  /* ---------- Ajustes (oculto) ---------- */
+  /* ---------------- hojas (ajustes / selector) ---------------- */
   .hoja {
-    position: fixed; inset: 0; z-index: 30; overflow-y: auto;
-    background: var(--bg-grupo);
-    padding: calc(var(--s-top) + 4px) 0 calc(var(--s-bot) + 40px);
-    -webkit-overflow-scrolling: touch;
+    position: fixed; inset: 0; z-index: 20; background: var(--bg);
+    display: flex; flex-direction: column;
   }
   .hoja[hidden] { display: none; }
-  .hoja-barra {
-    position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between;
-    padding: 6px 16px 10px; background: var(--bg-grupo);
-    font-size: 17px; font-weight: 700; letter-spacing: -.4px;
+  .hoja-cab {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: calc(var(--s-arriba) + 8px) 16px 10px;
   }
-  .hoja-barra button { font-weight: 600; color: var(--azul); }
-  .bloque { margin: 0 16px 28px; }
-  .bloque-tit {
-    padding: 0 16px 7px; font-size: 13px; line-height: 18px; color: var(--texto-2);
-    text-transform: uppercase;
+  .hoja-cab .ok { font-size: 17px; font-weight: 600; color: var(--acento); letter-spacing: -.3px; }
+  .hoja-cab .tit { font-size: 17px; font-weight: 600; letter-spacing: -.4px; }
+  .hoja-cuerpo { flex: 1 1 auto; overflow-y: auto; padding-bottom: 40px; }
+  .grupo-tit {
+    font-size: 13px; color: var(--texto-2); text-transform: uppercase;
+    letter-spacing: -.05px; padding: 18px 32px 6px;
   }
-  .tarjeta { border-radius: 10px; overflow: hidden; background: var(--tarjeta); }
-  .opcion {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    width: 100%; min-height: 44px; padding: 10px 16px; font-size: 17px; letter-spacing: -.3px;
+  .grupo { margin: 0 16px; background: var(--tarjeta); border-radius: 12px; overflow: hidden; }
+  .g-fila {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: 100%; text-align: left; padding: 11px 16px; position: relative;
+    font-size: 17px; letter-spacing: -.3px;
   }
-  .opcion + .opcion { border-top: .5px solid var(--sep-suave); }
-  .opcion:active { background: var(--bg-grupo); }
-  .opcion .valor { color: var(--texto-2); font-size: 17px; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .check { color: var(--azul); font-size: 17px; font-weight: 600; }
+  .g-fila + .g-fila::before {
+    content: ""; position: absolute; top: 0; left: 16px; right: 0;
+    height: .5px; background: var(--sep);
+  }
+  .g-fila .valor {
+    color: var(--texto-2); font-size: 16px; max-width: 52%;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .g-fila .chev { color: var(--texto-2); width: 8px; height: 13px; flex: 0 0 auto; }
+  .g-fila input {
+    border: 0; outline: 0; background: none; font: inherit; font-size: 17px;
+    color: var(--acento); text-align: right; width: 90px; letter-spacing: -.3px;
+  }
   .interruptor {
-    position: relative; flex: none; width: 51px; height: 31px; border-radius: 16px;
-    background: #767680; transition: background-color .2s;
+    width: 51px; height: 31px; border-radius: 16px; background: #39393d;
+    position: relative; flex: 0 0 auto; transition: background .18s;
   }
   .interruptor::after {
-    content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%;
-    background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, .28); transition: transform .2s;
+    content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px;
+    border-radius: 50%; background: #fff; transition: transform .18s;
+    box-shadow: 0 2px 4px rgba(0,0,0,.3);
   }
-  [data-activo="1"] > .interruptor { background: #30d158; }
-  [data-activo="1"] > .interruptor::after { transform: translateX(20px); }
-  .nota-pie { margin: 0 16px; font-size: 13px; line-height: 18px; color: var(--texto-2); }
-  .aviso-forzado {
-    display: flex; align-items: center; gap: 8px;
-    margin: 0 16px 16px; padding: 10px 14px; border-radius: 10px;
-    background: rgba(255, 179, 0, .14); color: var(--texto); font-size: 14px; line-height: 19px;
+  .interruptor[aria-checked="true"] { background: #30d158; }
+  .interruptor[aria-checked="true"]::after { transform: translateX(20px); }
+  .nota-pie {
+    font-size: 13px; color: var(--texto-2); padding: 10px 32px 0; line-height: 18px;
   }
-  .aviso-forzado strong { font-weight: 600; }
+  .item-sel {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: 100%; text-align: left; padding: 11px 16px; position: relative;
+    font-size: 17px; letter-spacing: -.3px;
+  }
+  .item-sel + .item-sel::before {
+    content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--sep);
+  }
+  .item-sel .num { color: var(--texto-2); font-variant-numeric: tabular-nums; width: 30px; flex: 0 0 auto; }
+  .item-sel .txt { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-sel .tick { color: var(--acento); font-size: 15px; }
+  .buscador-sel { margin: 0 16px 10px; }
 </style>
 </head>
 <body>
 
-<!-- ============ LISTA ============ -->
+<!-- ============ lista de notas ============ -->
 <section class="pantalla" id="p-lista">
-  <div class="barra">
-    <h1 class="grande" id="titulo-app">Notas</h1>
-    <label class="buscar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
-      <input id="busqueda" type="search" placeholder="Buscar" autocomplete="off" autocorrect="off" spellcheck="false">
-    </label>
+  <header class="barra">
+    <button class="circulo" id="btn-atras" aria-label="Atrás">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>
+    </button>
+    <div class="titulo-cab">
+      <div class="t1" id="cab-titulo">Todo (iCloud)</div>
+      <div class="t2" id="cab-sub">0 notas</div>
+    </div>
+    <button class="circulo" id="btn-menu" aria-label="Más">
+      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+    </button>
+  </header>
+  <main class="contenido">
+    <div class="sec-cab">Fijadas
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 5 5 5-5"/></svg>
+    </div>
+    <div class="tarjeta" id="tarjeta-listas"></div>
+    <div class="sec-cab sec-cab2">Notas
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 5 5 5-5"/></svg>
+    </div>
+    <div class="tarjeta" id="tarjeta-notas"></div>
+  </main>
+  <div class="flotante">
+    <div class="buscador">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+      <input id="buscar" type="search" placeholder="Buscar" autocomplete="off" spellcheck="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+    </div>
+    <button class="circulo" id="btn-nueva" aria-label="Nueva nota">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.5"/><path d="m11 16 7-7a1.9 1.9 0 0 0-2.7-2.7L8.3 13.4V16z"/></svg>
+    </button>
   </div>
-  <div id="cuerpo-lista"></div>
-  <button class="componer" id="btn-nueva" aria-label="Nueva nota">
-    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M19.5 5.5H8.5A3.5 3.5 0 0 0 5 9v15a3.5 3.5 0 0 0 3.5 3.5H23a3.5 3.5 0 0 0 3.5-3.5V14"/>
-      <path d="m15 22 9.4-9.4a2.5 2.5 0 0 0-3.5-3.5L11.5 18.5V22z"/>
-    </svg>
-  </button>
 </section>
 
-<!-- ============ NOTA ============ -->
+<!-- ============ nota ============ -->
 <section class="pantalla" id="p-nota" hidden>
-  <div class="barra fina">
-    <button class="volver" data-ir="lista">
-      <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 2 10l8 8"/></svg>
-      <span>Notas</span>
+  <header class="barra barra-nota">
+    <button class="circulo" id="volver-nota" aria-label="Notas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>
     </button>
-    <button class="accion-barra" id="btn-borrar">Eliminar</button>
-  </div>
-  <div class="detalle">
-    <div class="fecha-nota" id="fecha-nota"></div>
-    <input class="titulo-nota" id="titulo-nota" placeholder="Título" autocomplete="off" spellcheck="false">
-    <textarea class="cuerpo-nota" id="cuerpo-nota" placeholder="Escribe algo"></textarea>
+    <div class="pildora">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"/><path d="m8 6 4-3 4 3"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+      <span class="sep"></span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+    </div>
+  </header>
+  <main class="contenido contenido-nota">
+    <div class="fecha-nota" id="nota-fecha"></div>
+    <div class="cuerpo-nota" id="nota-cuerpo"></div>
+  </main>
+  <div class="pie">
+    <div class="pildora pildora-herramientas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="5" cy="7" r="1.8"/><circle cx="5" cy="17" r="1.8"/><path d="M10 7h9M10 17h9"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12.6 19a4 4 0 0 1-5.7-5.7l7.6-7.6a2.7 2.7 0 0 1 3.8 3.8l-7.5 7.5a1.4 1.4 0 0 1-2-2l6.9-6.9"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 15.5 12 8l4 7.5"/></svg>
+    </div>
+    <button class="circulo" id="btn-nueva2" aria-label="Nueva nota">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.5"/><path d="m11 16 7-7a1.9 1.9 0 0 0-2.7-2.7L8.3 13.4V16z"/></svg>
+    </button>
   </div>
 </section>
 
-<!-- ============ ÍNDICE ============ -->
-<section class="pantalla" id="p-indice" hidden>
-  <div class="barra fina">
-    <button class="volver" data-ir="lista">
-      <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 2 10l8 8"/></svg>
-      <span>Notas</span>
-    </button>
+<!-- ============ ajustes ocultos ============ -->
+<section class="hoja" id="hoja-ajustes" hidden>
+  <div class="hoja-cab">
+    <span class="tit">Ajustes</span>
+    <button class="ok" id="cerrar-ajustes">OK</button>
   </div>
-  <div class="detalle">
-    <div class="fecha-nota">Índice del repertorio</div>
-    <div class="indice-cab" id="indice-cab"></div>
-  </div>
-  <div class="rejilla" id="rejilla"></div>
-</section>
+  <div class="hoja-cuerpo">
+    <div class="grupo-tit">Número en juego</div>
+    <div class="grupo">
+      <div class="g-fila">Calculadora <input id="num-manual" inputmode="numeric" maxlength="2" placeholder="--"></div>
+      <button class="g-fila" id="usar-calc">Leer de la calculadora <span class="valor" id="num-detectado">--</span></button>
+    </div>
+    <div class="nota-pie">Las dos últimas cifras del resultado. Si lo dejas vacío se usa el último cálculo.</div>
 
-<!-- ============ ENTRADA ============ -->
-<section class="pantalla" id="p-entrada" hidden>
-  <div class="barra fina">
-    <button class="volver" data-ir="indice">
-      <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 2 10l8 8"/></svg>
-      <span>Índice</span>
-    </button>
-  </div>
-  <div class="detalle">
-    <div class="fecha-nota" id="entrada-fecha"></div>
-    <h2 class="titulo-nota" id="entrada-titulo" style="font-size:30px;line-height:36px"></h2>
-    <p class="categoria" id="entrada-cat"></p>
-    <p class="referencia" id="entrada-ref"></p>
+    <div class="grupo-tit">Forzado por lista</div>
+    <div class="grupo" id="grupo-listas"></div>
+    <div class="nota-pie">El ítem elegido se coloca en el número en juego. El que estaba ahí pasa a su posición: la lista sigue teniendo 99 nombres distintos.</div>
+
+    <div class="grupo-tit">Estado</div>
+    <div class="grupo">
+      <button class="g-fila" id="fila-activo" role="switch" aria-checked="true">
+        Forzado activo <span class="interruptor" id="int-activo" aria-checked="true"></span>
+      </button>
+    </div>
+    <div class="nota-pie" id="pie-estado"></div>
   </div>
 </section>
 
-<!-- ============ AJUSTES OCULTOS ============ -->
-<div class="hoja" id="hoja" hidden>
-  <div class="hoja-barra">
-    <span>Ajustes</span>
-    <button id="cerrar-hoja">OK</button>
+<!-- ============ selector de ítem ============ -->
+<section class="hoja" id="hoja-picker" hidden>
+  <div class="hoja-cab">
+    <button class="ok" id="volver-picker">Atrás</button>
+    <span class="tit" id="picker-titulo">Forzado</span>
+    <span style="width:56px"></span>
   </div>
-
-  <div class="bloque">
-    <div class="bloque-tit">Lista</div>
-    <div class="tarjeta" id="lista-opciones"></div>
-  </div>
-
-  <div class="bloque">
-    <div class="bloque-tit">Forzado</div>
-    <div class="tarjeta">
-      <button class="opcion" id="elegir-forzado"><span>Entrada</span><span class="valor" id="valor-forzado">Ninguna</span></button>
-      <button class="opcion" id="quitar-forzado"><span>Quitar forzado</span></button>
+  <div class="hoja-cuerpo">
+    <div class="buscador buscador-sel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+      <input id="buscar-item" type="search" placeholder="Buscar" autocomplete="off" spellcheck="false">
     </div>
+    <div class="grupo" id="lista-items"></div>
   </div>
+</section>
 
-  <div class="bloque">
-    <div class="bloque-tit">Estado</div>
-    <div class="tarjeta">
-      <button class="opcion" id="toggle-armado" data-activo="0"><span>Armado</span><span class="interruptor"></span></button>
-    </div>
-    <p class="nota-pie" style="padding-top:8px">Armado: cualquier entrada del índice muestra la entrada forzada. Desarmado: el índice muestra su contenido real.</p>
-  </div>
-
-  <div class="bloque">
-    <div class="bloque-tit">Índice</div>
-    <div class="tarjeta">
-      <div class="opcion"><span>Entradas</span><span class="valor" id="valor-total">100</span></div>
-      <div class="opcion"><span>Versión</span><span class="valor">1.0</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- ============ SELECTOR DE ENTRADA ============ -->
-<div class="hoja" id="hoja-picker" hidden>
-  <div class="hoja-barra">
-    <span id="picker-titulo">Elegir entrada</span>
-    <button id="cerrar-picker">OK</button>
-  </div>
-  <div class="barra" style="position:static;padding:0 16px 10px;background:transparent;backdrop-filter:none">
-    <label class="buscar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
-      <input id="busqueda-picker" type="search" placeholder="Buscar" autocomplete="off" spellcheck="false">
-    </label>
-  </div>
-  <div class="tarjeta" id="picker-lista" style="margin:0 16px"></div>
-</div>
-
-<script src="data.js"></script>
+<script src="listas/famosos.js"></script>
+<script src="listas/peliculas.js"></script>
+<script src="listas/objetos.js"></script>
+<script src="listas/musicos.js"></script>
 <script>
-'use strict';
+(function () {
+  'use strict';
 
-const CLAVE_NOTAS = 'notas.v1';
-const CLAVE_CFG = 'indice.v1';
+  const CLAVE_CFG = 'indice.cfg.v3';
+  const CLAVE_NUM = 'indice.numero';
+  const CLAVE_NOTAS = 'indice.notas.v3';
 
-/* ---------------- almacenamiento ---------------- */
-function leer(clave, porDefecto) {
-  try {
-    const crudo = localStorage.getItem(clave);
-    return crudo ? JSON.parse(crudo) : porDefecto;
-  } catch { return porDefecto; }
-}
-function guardar(clave, valor) {
-  try { localStorage.setItem(clave, JSON.stringify(valor)); } catch { /* privado */ }
-}
+  const $ = (sel, raiz) => (raiz || document).querySelector(sel);
+  const escapar = (t) => String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-const ahora = Date.now();
-const HORA = 60 * 60 * 1000;
-const DIA = 24 * HORA;
-
-let notas = leer(CLAVE_NOTAS, null);
-if (!Array.isArray(notas)) {
-  notas = [
-    { id: 'indice', fija: true, titulo: 'Índice', cuerpo: '', ts: ahora },
-    { id: 'n2', titulo: 'Compra', cuerpo: 'Pilas AA\nCafé en grano\nCinta de doble cara\nSobre grande para el libro', ts: ahora - 6 * HORA },
-    { id: 'n3', titulo: 'Guion corto', cuerpo: 'Abrir con la pregunta, nunca con el nombre.\nEl número antes que la promesa.', ts: ahora - 9 * HORA },
-    { id: 'n4', titulo: 'Estudio', cuerpo: 'Llaves del local en el cajón de la mesa.\nTercera planta, puerta al fondo.', ts: ahora - 1 * DIA - 3 * HORA },
-    { id: 'n5', titulo: 'Idea podcast', cuerpo: 'Capítulo 4: por qué el azar no existe.\nInvitado pendiente de confirmar.', ts: ahora - 1 * DIA - 8 * HORA },
-    { id: 'n6', titulo: 'Verano', cuerpo: 'Reservar casa en la costa antes de mayo.\nMirar la que está junto al faro.', ts: ahora - 9 * DIA },
-    { id: 'n7', titulo: 'Cámara', cuerpo: 'Cargar las dos baterías antes de la boda.\nFormatear la tarjeta.', ts: ahora - 21 * DIA }
-  ];
-  guardar(CLAVE_NOTAS, notas);
-}
-
-let cfg = leer(CLAVE_CFG, { lista: 'famosos', forzado: null, armado: false });
-if (!cfg || !LISTAS[cfg.lista]) cfg = { lista: 'famosos', forzado: null, armado: false };
-
-/* ---------------- utilidades ---------------- */
-const $ = (sel) => document.querySelector(sel);
-function uid() { return 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-function escapar(texto) {
-  return String(texto).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-const FECHA_LARGA = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-const FECHA_HORA = new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
-const FECHA_CORTA = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' });
-
-function diaDe(ts) {
-  const d = new Date(ts); d.setHours(0, 0, 0, 0);
-  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  return Math.round((hoy - d) / DIA);
-}
-function metaFecha(ts) {
-  const dias = diaDe(ts);
-  if (dias <= 0) return FECHA_HORA.format(ts);
-  if (dias === 1) return 'Ayer';
-  return FECHA_CORTA.format(ts);
-}
-function grupoDe(ts) {
-  const dias = diaDe(ts);
-  if (dias <= 0) return 'Hoy';
-  if (dias === 1) return 'Ayer';
-  return 'Anteriores';
-}
-function recorte(texto) {
-  return String(texto || '').replace(/\s+/g, ' ').trim();
-}
-
-/* ---------------- pantallas ---------------- */
-const pantallas = ['p-lista', 'p-nota', 'p-indice', 'p-entrada'];
-function mostrar(nombre) {
-  pantallas.forEach((id) => { document.getElementById(id).hidden = (id !== nombre); });
-  const el = document.getElementById(nombre);
-  if (el) el.scrollTop = 0;
-}
-
-/* ---------------- lista de notas ---------------- */
-let filtro = '';
-
-function filaHtml(nota) {
-  const resumen = nota.fija ? 'Cien entradas · 1–100' : recorte(nota.cuerpo);
-  return '<button class="fila" data-nota="' + nota.id + '">'
-    + '<div class="fila-titulo">' + escapar(nota.titulo || 'Sin título') + '</div>'
-    + '<div class="fila-meta"><span>' + metaFecha(nota.ts) + '</span>'
-    + '<span class="recorte">' + escapar(resumen) + '</span></div>'
-    + '</button>';
-}
-
-function dibujarLista() {
-  const consulta = filtro.trim().toLowerCase();
-  let visibles = notas.slice().sort((a, b) => b.ts - a.ts);
-  if (consulta) {
-    visibles = visibles.filter((n) =>
-      (n.titulo + ' ' + n.cuerpo).toLowerCase().includes(consulta));
+  /* ---------- configuración ---------- */
+  function cfgInicial() {
+    return { activo: true, forzados: {}, manual: '' };
   }
-  const contenedor = $('#cuerpo-lista');
-  if (!visibles.length) {
-    contenedor.innerHTML = consulta
-      ? '<div class="vacio">Sin resultados</div>'
-      : '<div class="vacio">No hay notas</div>';
-    return;
+  function leerCfg() {
+    try {
+      const c = JSON.parse(localStorage.getItem(CLAVE_CFG));
+      if (c && typeof c === 'object') {
+        return { activo: c.activo !== false, forzados: c.forzados || {}, manual: c.manual || '' };
+      }
+    } catch (e) { /* configuración ilegible: se empieza limpia */ }
+    return cfgInicial();
   }
-  let html = '';
-  let grupoActual = null;
-  let abierto = false;
-  visibles.forEach((nota) => {
-    const grupo = grupoDe(nota.ts);
-    if (grupo !== grupoActual) {
-      if (abierto) html += '</div>';
-      html += '<div class="grupo-tit">' + grupo + '</div><div class="filas">';
-      abierto = true;
-      grupoActual = grupo;
+  let cfg = leerCfg();
+  const guardarCfg = () => { try { localStorage.setItem(CLAVE_CFG, JSON.stringify(cfg)); } catch (e) {} };
+
+  function numeroDetectado() {
+    const n = parseInt(localStorage.getItem(CLAVE_NUM) || '', 10);
+    return (n >= 1 && n <= 99) ? n : null;
+  }
+  function numeroEnJuego() {
+    const manual = parseInt(cfg.manual, 10);
+    if (manual >= 1 && manual <= 99) return manual;
+    return numeroDetectado();
+  }
+
+  /* ---------- notas de texto ---------- */
+  const HOY = Date.now();
+  const DIA = 86400000;
+  function notasSemilla() {
+    return [
+      { id: 'n1', titulo: 'Compra', cuerpo: 'Pilas AAA\nCafé\nCinta de doble cara', ts: HOY - 3600000 },
+      { id: 'n2', titulo: 'Guion corto', cuerpo: 'Abrir con la pregunta.\nNunca con el nombre.\nCerrar en bucle con la primera frase.', ts: HOY - 4 * 3600000 },
+      { id: 'n3', titulo: 'Estudio', cuerpo: 'Llaves del local\n3ª planta\nCódigo del portal: 1987', ts: HOY - DIA },
+      { id: 'n4', titulo: 'Idea podcast', cuerpo: 'Capítulo 4: por qué el azar no existe.\nInvitado pendiente de confirmar.', ts: HOY - DIA - 7200000 },
+      { id: 'n5', titulo: 'Verano', cuerpo: 'Reservar casa en la costa antes de mayo.\nMirar tren para los cuatro.', ts: HOY - 4 * DIA },
+      { id: 'n6', titulo: 'Cámara', cuerpo: 'Cargar las dos baterías antes del sábado.\nFormatear la tarjeta.', ts: HOY - 12 * DIA }
+    ];
+  }
+  function leerNotas() {
+    try {
+      const n = JSON.parse(localStorage.getItem(CLAVE_NOTAS));
+      if (Array.isArray(n) && n.length) return n;
+    } catch (e) {}
+    return notasSemilla();
+  }
+  let notas = leerNotas();
+  const guardarNotas = () => { try { localStorage.setItem(CLAVE_NOTAS, JSON.stringify(notas)); } catch (e) {} };
+
+  /* ---------- las 99 entradas con el forzado colocado ---------- */
+  function entradasDe(clave) {
+    const lista = window.LISTAS[clave];
+    if (!lista) return [];
+    const items = lista.items.slice();
+    const forzado = cfg.forzados[clave];
+    const n = numeroEnJuego();
+    if (!cfg.activo || !forzado || !n) return items;
+    const destino = items.indexOf(forzado);
+    const origen = n - 1;
+    if (destino < 0 || origen < 0 || origen >= items.length) return items;
+    if (destino === origen) return items;
+    items[origen] = forzado;
+    items[destino] = lista.items[origen];
+    return items;
+  }
+
+  /* ---------- utilidades de fecha ---------- */
+  function dosDigitos(n) { return n < 10 ? '0' + n : String(n); }
+  function fechaCorta(ts) {
+    const d = new Date(ts);
+    return dosDigitos(d.getDate()) + '/' + dosDigitos(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(-2);
+  }
+  const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+    'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  function fechaLarga(ts) {
+    const d = new Date(ts);
+    return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear();
+  }
+
+  /* ---------- vista: lista ---------- */
+  let filtro = '';
+
+  function filaLista(clave) {
+    const lista = window.LISTAS[clave];
+    const n = entradasDe(clave).length;
+    return '<button class="fila" data-lista="' + clave + '">'
+      + '<div class="fila-titulo">' + escapar(lista.titulo) + '</div>'
+      + '<div class="fila-meta"><span class="fecha">' + fechaCorta(HOY) + '</span> '
+      + n + ' nombres</div>'
+      + '<div class="fila-carpeta">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.2h7A1.5 1.5 0 0 1 19 9.7v7.8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 17.5z"/></svg>'
+      + 'Notas</div></button>';
+  }
+
+  function filaTexto(nota) {
+    const resumen = nota.cuerpo.split('\n')[0];
+    return '<button class="fila" data-nota="' + nota.id + '">'
+      + '<div class="fila-titulo">' + escapar(nota.titulo || 'Sin título') + '</div>'
+      + '<div class="fila-meta"><span class="fecha">' + fechaCorta(nota.ts) + '</span> ' + escapar(resumen) + '</div>'
+      + '<div class="fila-carpeta">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.2h7A1.5 1.5 0 0 1 19 9.7v7.8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 17.5z"/></svg>'
+      + 'Notas</div></button>';
+  }
+
+  function pintarLista() {
+    const q = filtro.trim().toLowerCase();
+    const claves = Object.keys(window.LISTAS).filter((k) => !q || window.LISTAS[k].titulo.toLowerCase().includes(q));
+    $('#tarjeta-listas').innerHTML = claves.length
+      ? claves.map(filaLista).join('')
+      : '<div class="fila"><div class="fila-meta">Sin resultados</div></div>';
+
+    const visibles = notas
+      .slice()
+      .sort((a, b) => b.ts - a.ts)
+      .filter((n) => !q || (n.titulo + ' ' + n.cuerpo).toLowerCase().includes(q));
+    $('#tarjeta-notas').innerHTML = visibles.length
+      ? visibles.map(filaTexto).join('')
+      : '<div class="fila"><div class="fila-meta">Sin resultados</div></div>';
+
+    const total = notesCount();
+    $('#cab-sub').textContent = total + (total === 1 ? ' nota' : ' notas');
+  }
+
+  function notesCount() {
+    return Object.keys(window.LISTAS).length + notas.length;
+  }
+
+  /* ---------- vista: nota ---------- */
+  let notaAbierta = null;
+
+  function abrirLista(clave) {
+    const lista = window.LISTAS[clave];
+    const items = entradasDe(clave);
+    const lineas = items.map((t, i) => (i + 1) + '. ' + t).join('\n');
+    notaAbierta = { tipo: 'lista', clave: clave };
+    $('#nota-fecha').textContent = fechaLarga(HOY);
+    $('#nota-cuerpo').innerHTML = '<span class="titulo">' + escapar(lista.titulo) + '</span>'
+      + '<span id="texto-nota">' + escapar(lineas) + '</span>';
+    mostrarNota();
+  }
+
+  function abrirTexto(id) {
+    const nota = notas.find((n) => n.id === id);
+    if (!nota) return;
+    notaAbierta = { tipo: 'texto', id: id };
+    $('#nota-fecha').textContent = fechaLarga(nota.ts);
+    const cuerpo = $('#nota-cuerpo');
+    cuerpo.innerHTML = '<span class="titulo">' + escapar(nota.titulo) + '</span>'
+      + '<span id="texto-nota">' + escapar(nota.cuerpo) + '</span>';
+    mostrarNota();
+  }
+
+  function mostrarNota() {
+    $('#p-lista').hidden = true;
+    $('#p-nota').hidden = false;
+    $('#p-nota').scrollTop = 0;
+    $('.contenido-nota').scrollTop = 0;
+  }
+
+  function mostrarLista() {
+    $('#p-nota').hidden = true;
+    $('#p-lista').hidden = false;
+    pintarLista();
+  }
+
+  /* ---------- ajustes ---------- */
+  function abrirAjustes() {
+    pintarAjustes();
+    $('#hoja-ajustes').hidden = false;
+  }
+
+  function pintarAjustes() {
+    const n = numeroEnJuego();
+    $('#num-manual').value = cfg.manual || '';
+    $('#num-detectado').textContent = numeroDetectado() ? numeroDetectado() : '--';
+    const filas = Object.keys(window.LISTAS).map((clave) => {
+      const valor = cfg.forzados[clave] || 'Sin forzar';
+      return '<button class="g-fila" data-forzar="' + clave + '">' + escapar(window.LISTAS[clave].titulo)
+        + ' <span class="valor">' + escapar(valor) + '</span>'
+        + '<svg class="chev" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m1 1 5 5.5L1 12"/></svg>'
+        + '</button>';
+    }).join('');
+    $('#grupo-listas').innerHTML = filas;
+    $('#int-activo').setAttribute('aria-checked', cfg.activo ? 'true' : 'false');
+    $('#fila-activo').setAttribute('aria-checked', cfg.activo ? 'true' : 'false');
+
+    const estado = [];
+    estado.push(n ? 'Número en juego: ' + n : 'Sin número: haz un cálculo o escríbelo arriba.');
+    const sinForzar = Object.keys(window.LISTAS).filter((k) => !cfg.forzados[k]);
+    if (sinForzar.length) {
+      estado.push('Sin forzar: ' + sinForzar.map((k) => window.LISTAS[k].titulo).join(', ') + '.');
     }
-    html += filaHtml(nota);
-  });
-  if (abierto) html += '</div>';
-  contenedor.innerHTML = html;
-}
-
-/* ---------------- detalle ---------------- */
-let notaAbierta = null;
-
-function abrirNota(id) {
-  const nota = notas.find((n) => n.id === id);
-  if (!nota) return;
-  if (nota.fija) { abrirIndice(); return; }
-  notaAbierta = id;
-  $('#fecha-nota').textContent = FECHA_LARGA.format(nota.ts);
-  $('#titulo-nota').value = nota.titulo;
-  $('#cuerpo-nota').value = nota.cuerpo;
-  mostrar('p-nota');
-}
-
-function guardarNotaAbierta() {
-  const nota = notas.find((n) => n.id === notaAbierta);
-  if (!nota) return;
-  nota.titulo = $('#titulo-nota').value;
-  nota.cuerpo = $('#cuerpo-nota').value;
-  nota.ts = Date.now();
-  guardar(CLAVE_NOTAS, notas);
-}
-
-/* ---------------- índice ---------------- */
-function abrirIndice() {
-  const lista = LISTAS[cfg.lista];
-  const filas = cfg.armado && cfg.forzado ? '<strong>' + escapar(cfg.forzado.split('|')[0]) + '</strong> en todas las entradas' : 'contenido real';
-  $('#indice-cab').innerHTML = escapar(lista.etiqueta) + ' · ' + TOTAL_ENTRADAS + ' entradas · ' + filas;
-  let html = '';
-  for (let n = 1; n <= TOTAL_ENTRADAS; n++) {
-    html += '<button class="celda" data-entrada="' + n + '">' + n + '</button>';
-  }
-  $('#rejilla').innerHTML = html;
-  mostrar('p-indice');
-}
-
-function itemDe(numero) {
-  if (cfg.armado && cfg.forzado) return cfg.forzado;
-  const lista = LISTAS[cfg.lista];
-  return lista.items[(numero - 1) % lista.items.length];
-}
-
-function abrirEntrada(numero) {
-  const [nombre, detalle] = itemDe(numero).split('|');
-  $('#entrada-fecha').textContent = FECHA_LARGA.format(Date.now());
-  $('#entrada-titulo').textContent = nombre;
-  $('#entrada-cat').textContent = detalle || '';
-  $('#entrada-ref').textContent = 'Entrada ' + numero + ' de ' + TOTAL_ENTRADAS
-    + ' · índice de ' + LISTAS[cfg.lista].etiqueta.toLowerCase();
-  mostrar('p-entrada');
-}
-
-/* ---------------- ajustes ocultos ---------------- */
-function dibujarAjustes() {
-  $('#lista-opciones').innerHTML = Object.keys(LISTAS).map((clave) =>
-    '<button class="opcion" data-lista="' + clave + '"><span>' + LISTAS[clave].etiqueta + '</span>'
-    + (cfg.lista === clave ? '<span class="check">✓</span>' : '') + '</button>').join('');
-  $('#valor-forzado').textContent = cfg.forzado ? cfg.forzado.split('|')[0] : 'Ninguna';
-  $('#toggle-armado').dataset.activo = cfg.armado && cfg.forzado ? '1' : '0';
-  $('#valor-total').textContent = TOTAL_ENTRADAS;
-}
-
-function abrirAjustes() {
-  dibujarAjustes();
-  $('#hoja').hidden = false;
-}
-
-function dibujarPicker(consulta) {
-  const texto = (consulta || '').trim().toLowerCase();
-  const items = LISTAS[cfg.lista].items.filter((i) => !texto || i.toLowerCase().includes(texto));
-  $('#picker-titulo').textContent = LISTAS[cfg.lista].etiqueta;
-  $('#picker-lista').innerHTML = items.length
-    ? items.map((item) => {
-      const nombre = item.split('|')[0];
-      return '<button class="opcion" data-item="' + escapar(item) + '"><span>' + escapar(nombre) + '</span>'
-        + (cfg.forzado === item ? '<span class="check">✓</span>' : '') + '</button>';
-    }).join('')
-    : '<div class="vacio">Sin resultados</div>';
-}
-
-function abrirPicker() {
-  $('#busqueda-picker').value = '';
-  dibujarPicker('');
-  $('#hoja-picker').hidden = false;
-}
-
-/* ---------------- eventos ---------------- */
-document.addEventListener('click', (evento) => {
-  const nota = evento.target.closest('[data-nota]');
-  if (nota) { abrirNota(nota.dataset.nota); return; }
-
-  const volver = evento.target.closest('[data-ir]');
-  if (volver) {
-    const destino = volver.dataset.ir;
-    if (destino === 'lista') { dibujarLista(); mostrar('p-lista'); }
-    if (destino === 'indice') { abrirIndice(); }
-    return;
+    $('#pie-estado').textContent = estado.join(' ');
   }
 
-  const entrada = evento.target.closest('[data-entrada]');
-  if (entrada) { abrirEntrada(Number(entrada.dataset.entrada)); return; }
+  let clavePicker = null;
 
-  const opcionLista = evento.target.closest('[data-lista]');
-  if (opcionLista) {
-    cfg.lista = opcionLista.dataset.lista;
-    if (cfg.forzado && !LISTAS[cfg.lista].items.includes(cfg.forzado)) {
-      cfg.forzado = null; cfg.armado = false;
-    }
-    guardar(CLAVE_CFG, cfg);
-    dibujarAjustes();
-    return;
+  function abrirPicker(clave) {
+    clavePicker = clave;
+    $('#picker-titulo').textContent = window.LISTAS[clave].titulo;
+    $('#buscar-item').value = '';
+    pintarPicker('');
+    $('#hoja-picker').hidden = false;
   }
 
-  const opcionItem = evento.target.closest('[data-item]');
-  if (opcionItem) {
-    cfg.forzado = opcionItem.dataset.item;
-    cfg.armado = true;
-    guardar(CLAVE_CFG, cfg);
-    $('#hoja-picker').hidden = true;
-    dibujarAjustes();
-    return;
-  }
-});
-
-$('#busqueda').addEventListener('input', (evento) => {
-  filtro = evento.target.value;
-  dibujarLista();
-});
-
-$('#busqueda-picker').addEventListener('input', (evento) => {
-  dibujarPicker(evento.target.value);
-});
-
-$('#btn-nueva').addEventListener('click', () => {
-  const nota = { id: uid(), titulo: '', cuerpo: '', ts: Date.now() };
-  notas.unshift(nota);
-  guardar(CLAVE_NOTAS, notas);
-  filtro = '';
-  $('#busqueda').value = '';
-  abrirNota(nota.id);
-  setTimeout(() => $('#titulo-nota').focus(), 60);
-});
-
-$('#btn-borrar').addEventListener('click', () => {
-  const nota = notas.find((n) => n.id === notaAbierta);
-  if (!nota || nota.fija) return;
-  if (!confirm('¿Eliminar esta nota?')) return;
-  notas = notas.filter((n) => n.id !== notaAbierta);
-  guardar(CLAVE_NOTAS, notas);
-  notaAbierta = null;
-  dibujarLista();
-  mostrar('p-lista');
-});
-
-$('#titulo-nota').addEventListener('input', guardarNotaAbierta);
-$('#cuerpo-nota').addEventListener('input', guardarNotaAbierta);
-
-$('#cerrar-hoja').addEventListener('click', () => { $('#hoja').hidden = true; dibujarLista(); mostrar('p-lista'); });
-$('#cerrar-picker').addEventListener('click', () => { $('#hoja-picker').hidden = true; });
-
-$('#elegir-forzado').addEventListener('click', abrirPicker);
-
-$('#quitar-forzado').addEventListener('click', () => {
-  cfg.forzado = null;
-  cfg.armado = false;
-  guardar(CLAVE_CFG, cfg);
-  dibujarAjustes();
-});
-
-$('#toggle-armado').addEventListener('click', () => {
-  if (!cfg.forzado) { abrirPicker(); return; }
-  cfg.armado = !cfg.armado;
-  guardar(CLAVE_CFG, cfg);
-  dibujarAjustes();
-});
-
-/* Gesto oculto: tres toques rápidos (o pulsación larga) sobre el título «Notas». */
-(function gestoOculto() {
-  const titulo = $('#titulo-app');
-  let toques = 0;
-  let temporizador = null;
-  let pulsacion = null;
-  let largo = false;
-
-  ['pointerdown', 'touchstart'].forEach((tipo) => titulo.addEventListener(tipo, (evento) => {
-    if (evento.cancelable) evento.preventDefault();
-    largo = false;
-    clearTimeout(pulsacion);
-    pulsacion = setTimeout(() => { pulsacion = null; largo = true; abrirAjustes(); }, 1100);
-  }, { passive: false }));
-
-  ['pointerup', 'pointercancel', 'pointerleave', 'touchend', 'touchcancel'].forEach((tipo) => {
-    titulo.addEventListener(tipo, () => {
-      if (pulsacion) { clearTimeout(pulsacion); pulsacion = null; }
+  function pintarPicker(filtroItem) {
+    const q = filtroItem.trim().toLowerCase();
+    const items = window.LISTAS[clavePicker].items;
+    const elegido = cfg.forzados[clavePicker];
+    let html = '<button class="item-sel" data-item=""><span class="num"></span>'
+      + '<span class="txt">Sin forzar</span>'
+      + (elegido ? '' : '<span class="tick">✓</span>') + '</button>';
+    items.forEach((texto, i) => {
+      if (q && !texto.toLowerCase().includes(q)) return;
+      html += '<button class="item-sel" data-item="' + escapar(texto) + '">'
+        + '<span class="num">' + (i + 1) + '</span>'
+        + '<span class="txt">' + escapar(texto) + '</span>'
+        + (elegido === texto ? '<span class="tick">✓</span>' : '')
+        + '</button>';
     });
-  });
+    $('#lista-items').innerHTML = html;
+  }
 
-  titulo.addEventListener('click', () => {
-    if (largo) { largo = false; return; }
-    toques += 1;
-    clearTimeout(temporizador);
-    temporizador = setTimeout(() => { toques = 0; }, 700);
-    if (toques >= 3) {
-      toques = 0;
+  /* ---------- gesto oculto ---------- */
+  (function gestoOculto() {
+    const titulo = $('#cab-titulo');
+    let toques = 0, temporizador = null, pulsacion = null, largo = false;
+
+    ['pointerdown', 'touchstart'].forEach((tipo) => titulo.addEventListener(tipo, () => {
+      largo = false;
+      clearTimeout(pulsacion);
+      pulsacion = setTimeout(() => { pulsacion = null; largo = true; abrirAjustes(); }, 1100);
+    }, { passive: true }));
+
+    ['pointerup', 'pointercancel', 'pointerleave', 'touchend', 'touchcancel'].forEach((tipo) => {
+      titulo.addEventListener(tipo, () => {
+        if (pulsacion) { clearTimeout(pulsacion); pulsacion = null; }
+      });
+    });
+
+    titulo.addEventListener('click', () => {
+      if (largo) { largo = false; return; }
+      toques += 1;
       clearTimeout(temporizador);
-      abrirAjustes();
+      temporizador = setTimeout(() => { toques = 0; }, 700);
+      if (toques >= 3) { toques = 0; clearTimeout(temporizador); abrirAjustes(); }
+    });
+  })();
+
+  /* ---------- eventos ---------- */
+  document.addEventListener('click', (evento) => {
+    const lista = evento.target.closest('[data-lista]');
+    if (lista) { abrirLista(lista.dataset.lista); return; }
+
+    const nota = evento.target.closest('[data-nota]');
+    if (nota) { abrirTexto(nota.dataset.nota); return; }
+
+    const forzar = evento.target.closest('[data-forzar]');
+    if (forzar) { abrirPicker(forzar.dataset.forzar); return; }
+
+    const item = evento.target.closest('[data-item]');
+    if (item) {
+      if (item.dataset.item) cfg.forzados[clavePicker] = item.dataset.item;
+      else delete cfg.forzados[clavePicker];
+      cfg.activo = true;
+      guardarCfg();
+      $('#hoja-picker').hidden = true;
+      pintarAjustes();
+      return;
     }
   });
+
+  $('#volver-nota').addEventListener('click', mostrarLista);
+  $('#btn-atras').addEventListener('click', () => { filtro = ''; $('#buscar').value = ''; pintarLista(); });
+  $('#buscar').addEventListener('input', (e) => { filtro = e.target.value; pintarLista(); });
+  $('#buscar-item').addEventListener('input', (e) => pintarPicker(e.target.value));
+
+  function nuevaNota() {
+    const nota = { id: 'n' + Date.now(), titulo: 'Nueva nota', cuerpo: '', ts: Date.now() };
+    notas.unshift(nota);
+    guardarNotas();
+    abrirTexto(nota.id);
+  }
+  $('#btn-nueva').addEventListener('click', nuevaNota);
+  $('#btn-nueva2').addEventListener('click', nuevaNota);
+
+  $('#cerrar-ajustes').addEventListener('click', () => {
+    $('#hoja-ajustes').hidden = true;
+    pintarLista();
+  });
+  $('#volver-picker').addEventListener('click', () => { $('#hoja-picker').hidden = true; pintarAjustes(); });
+
+  $('#usar-calc').addEventListener('click', () => {
+    cfg.manual = '';
+    guardarCfg();
+    pintarAjustes();
+  });
+
+  $('#num-manual').addEventListener('input', (e) => {
+    const limpio = e.target.value.replace(/\D/g, '').slice(0, 2);
+    e.target.value = limpio;
+    cfg.manual = limpio;
+    guardarCfg();
+    pintarAjustes();
+  });
+
+  $('#fila-activo').addEventListener('click', () => {
+    cfg.activo = !cfg.activo;
+    guardarCfg();
+    pintarAjustes();
+  });
+
+  // El número puede cambiar en la calculadora mientras la app está abierta.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) pintarAjustes();
+  });
+
+  pintarLista();
+  pintarAjustes();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
 })();
-
-document.addEventListener('contextmenu', (evento) => {
-  if (evento.target.tagName !== 'INPUT' && evento.target.tagName !== 'TEXTAREA') evento.preventDefault();
-});
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
-}
-
-dibujarLista();
-mostrar('p-lista');
 </script>
 </body>
 </html>
