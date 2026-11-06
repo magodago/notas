@@ -137,6 +137,9 @@
     display: block; font-size: 22px; font-weight: 700; line-height: 28px;
     letter-spacing: -.5px; margin-bottom: 10px;
   }
+  .cuerpo-nota [contenteditable] { outline: none; -webkit-user-select: text; user-select: text; }
+  .cuerpo-nota .titulo.vacio { color: var(--texto-2); }
+  #ed-cuerpo { display: block; min-height: 45vh; white-space: pre-wrap; font-size: 17px; line-height: 24px; }
   .pie {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
     display: flex; align-items: center; justify-content: space-between;
@@ -509,7 +512,7 @@
   function filaTexto(nota) {
     const resumen = nota.cuerpo.split('\n')[0];
     return '<button class="fila" data-nota="' + nota.id + '">'
-      + '<div class="fila-titulo">' + escapar(nota.titulo || 'Sin título') + '</div>'
+      + '<div class="fila-titulo">' + escapar(nota.titulo || 'Nueva nota') + '</div>'
       + '<div class="fila-meta"><span class="fecha">' + fechaCorta(nota.ts) + '</span> ' + escapar(resumen) + '</div>'
       + '<div class="fila-carpeta">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.2h7A1.5 1.5 0 0 1 19 9.7v7.8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 17.5z"/></svg>'
@@ -570,15 +573,54 @@
     } catch (e) { /* sin red */ }
   }
 
+  let temporizadorTexto = null;
+  let ultimoTexto = '';
+
+  /* Lo que se escribe en la libreta viaja al puente: la app de Musica lo lee
+     como si viniera del Inject. */
+  function enviarTexto(nota) {
+    const titulo = (nota.titulo || '').trim();
+    const cuerpo = (nota.cuerpo || '').trim();
+    const texto = (titulo && titulo !== 'Nueva nota' ? titulo : (cuerpo.split('\n')[0] || '')).slice(0, 160);
+    if (!texto || texto === ultimoTexto) return;
+    ultimoTexto = texto;
+    try {
+      fetch(PUENTE + '/texto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto: texto }),
+        keepalive: true
+      }).catch(() => {});
+    } catch (e) {}
+  }
+
   function abrirTexto(id) {
     const nota = notas.find((n) => n.id === id);
     if (!nota) return;
     notaAbierta = { tipo: 'texto', id: id };
     $('#nota-fecha').textContent = fechaLarga(nota.ts);
     const cuerpo = $('#nota-cuerpo');
-    cuerpo.innerHTML = '<span class="titulo">' + escapar(nota.titulo) + '</span>'
-      + '<span id="texto-nota">' + escapar(nota.cuerpo) + '</span>';
+    cuerpo.innerHTML = '<span class="titulo" id="ed-titulo" contenteditable="true" spellcheck="false"></span>'
+      + '<span id="ed-cuerpo" contenteditable="true" spellcheck="false"></span>';
+    const et = $('#ed-titulo');
+    const ec = $('#ed-cuerpo');
+    if (nota.titulo) { et.textContent = nota.titulo; } else { et.textContent = 'Nueva nota'; et.classList.add('vacio'); }
+    ec.textContent = nota.cuerpo || '';
+    function guardar() {
+      const vacio = et.classList.contains('vacio');
+      nota.titulo = vacio ? '' : (et.textContent || '').trim();
+      nota.cuerpo = ec.textContent || '';
+      guardarNotas();
+      clearTimeout(temporizadorTexto);
+      temporizadorTexto = setTimeout(() => enviarTexto(nota), 900);
+    }
+    et.addEventListener('focus', () => {
+      if (et.classList.contains('vacio')) { et.textContent = ''; et.classList.remove('vacio'); }
+    });
+    et.addEventListener('input', guardar);
+    ec.addEventListener('input', guardar);
     mostrarNota();
+    setTimeout(() => { try { et.focus(); } catch (e) {} }, 120);
   }
 
   function mostrarNota() {
@@ -759,13 +801,20 @@
     }
   });
 
-  $('#volver-nota').addEventListener('click', mostrarLista);
+  $('#volver-nota').addEventListener('click', () => {
+    if (notaAbierta && notaAbierta.tipo === 'texto') {
+      clearTimeout(temporizadorTexto);
+      const n = notas.find((x) => x.id === notaAbierta.id);
+      if (n) enviarTexto(n);
+    }
+    mostrarLista();
+  });
   $('#btn-atras').addEventListener('click', () => { filtro = ''; $('#buscar').value = ''; pintarLista(); });
   $('#buscar').addEventListener('input', (e) => { filtro = e.target.value; pintarLista(); });
   $('#buscar-item').addEventListener('input', (e) => pintarPicker(e.target.value));
 
   function nuevaNota() {
-    const nota = { id: 'n' + Date.now(), titulo: 'Nueva nota', cuerpo: '', ts: Date.now() };
+    const nota = { id: 'n' + Date.now(), titulo: '', cuerpo: '', ts: Date.now() };
     notas.unshift(nota);
     guardarNotas();
     abrirTexto(nota.id);
