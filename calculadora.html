@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Calculadora</title>
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Calculadora">
+<link rel="manifest" href="calculadora.webmanifest">
+<link rel="apple-touch-icon" href="calculadora-icon.png">
+<link rel="icon" href="calculadora-icon.png">
+<style>
+  :root {
+    /* Paleta del sistema en modo oscuro */
+    --fondo: #000000;
+    --texto: #ffffff;
+    --tenue: #8e8e93;
+    --tecla: #333333;
+    --tecla-pulsada: #737373;
+    --funcion: #a5a5a5;
+    --funcion-texto: #000000;
+    --funcion-pulsada: #d4d4d2;
+    --operador: #ff9f0a;
+    --operador-pulsada: #ffc245;
+
+    /* Métricas del iPhone */
+    --lado: 12px;
+    --hueco: 12px;
+    --ancho-tecla: calc((100vw - var(--lado) * 2 - var(--hueco) * 3) / 4);
+    --s-top: env(safe-area-inset-top, 0px);
+    --s-bot: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: var(--fondo); color: var(--texto);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%; -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none; overscroll-behavior: none;
+  }
+  body { display: flex; flex-direction: column; }
+
+  /* Franja bajo la barra de estado */
+  body::before {
+    content: ""; position: fixed; z-index: 9; top: 0; left: 0; right: 0;
+    height: var(--s-top); background: var(--fondo); pointer-events: none;
+  }
+
+  .pantalla {
+    flex: 1 1 auto; display: flex; flex-direction: column;
+    justify-content: flex-end; align-items: stretch;
+    padding: calc(var(--s-top) + 8px) var(--lado) 0;
+  }
+  .lectura {
+    display: flex; flex-direction: column; align-items: flex-end;
+    gap: 0; padding: 0 12px 4px; overflow: hidden;
+  }
+  .expresion {
+    min-height: 22px; color: var(--tenue);
+    font-size: 26px; line-height: 30px; letter-spacing: -.5px;
+    white-space: nowrap; overflow: hidden; text-align: right; max-width: 100%;
+  }
+  .resultado {
+    font-size: calc(var(--ancho-tecla) * 1.18); line-height: 1.08;
+    font-weight: 300; letter-spacing: -2px; white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .teclado {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: var(--hueco);
+  }
+  .tecla {
+    display: flex; align-items: center; justify-content: center;
+    height: var(--ancho-tecla); border: 0; margin: 0; padding: 0;
+    border-radius: 50%; background: var(--tecla); color: var(--texto);
+    font-family: inherit; font-size: calc(var(--ancho-tecla) * .42);
+    font-weight: 400; letter-spacing: -.5px;
+    touch-action: manipulation; cursor: pointer;
+    transition: background-color .18s ease-out, color .18s ease-out;
+  }
+  .tecla:active, .tecla.pulsada { background: var(--tecla-pulsada); transition-duration: .04s; }
+  .tecla.funcion { background: var(--funcion); color: var(--funcion-texto); font-weight: 500; }
+  .tecla.funcion:active, .tecla.funcion.pulsada { background: var(--funcion-pulsada); }
+  .tecla.operador { background: var(--operador); color: #fff; font-size: calc(var(--ancho-tecla) * .50); }
+  .tecla.operador:active, .tecla.operador.pulsada { background: var(--operador-pulsada); }
+  .tecla.operador.activa { background: #fff; color: var(--operador); }
+  .tecla.cero {
+    grid-column: span 2; border-radius: 999px;
+    justify-content: flex-start; padding-left: calc(var(--ancho-tecla) * .36);
+  }
+  .tecla.cero.activa { justify-content: flex-start; }
+  .tecla svg { width: 46%; height: 46%; fill: currentColor; }
+
+  .teclado { padding-bottom: calc(var(--s-bot) + 8px); }
+</style>
+</head>
+<body>
+  <div class="pantalla">
+    <div class="lectura">
+      <div class="expresion" id="expresion"></div>
+      <div class="resultado" id="resultado">0</div>
+    </div>
+    <div class="teclado" id="teclado">
+      <button class="tecla funcion" data-key="clear" aria-label="Borrar todo">AC</button>
+      <button class="tecla funcion" data-key="sign" aria-label="Cambiar signo">+/−</button>
+      <button class="tecla funcion" data-key="percent" aria-label="Porcentaje">%</button>
+      <button class="tecla operador" data-key="÷" aria-label="Dividir">÷</button>
+
+      <button class="tecla" data-key="7">7</button>
+      <button class="tecla" data-key="8">8</button>
+      <button class="tecla" data-key="9">9</button>
+      <button class="tecla operador" data-key="×" aria-label="Multiplicar">×</button>
+
+      <button class="tecla" data-key="4">4</button>
+      <button class="tecla" data-key="5">5</button>
+      <button class="tecla" data-key="6">6</button>
+      <button class="tecla operador" data-key="−" aria-label="Restar">−</button>
+
+      <button class="tecla" data-key="1">1</button>
+      <button class="tecla" data-key="2">2</button>
+      <button class="tecla" data-key="3">3</button>
+      <button class="tecla operador" data-key="+" aria-label="Sumar">+</button>
+
+      <button class="tecla cero" data-key="0">0</button>
+      <button class="tecla" data-key="comma" aria-label="Coma decimal">,</button>
+      <button class="tecla operador" data-key="equals" aria-label="Igual">=</button>
+    </div>
+  </div>
+
+<script>
+'use strict';
+
+const MAX_DIGITOS = 12;
+const formato = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 10 });
+const DECIMAL = ',';
+
+const elResultado = document.getElementById('resultado');
+const elExpresion = document.getElementById('expresion');
+const teclado = document.getElementById('teclado');
+
+let terminos = [];      // alternancia: número, operador, número, ...
+let entrada = '';       // lo que se está tecleando
+let resultado = null;   // resultado mostrado tras =
+let ultimaExpresion = '';
+
+const esOperador = (t) => typeof t === 'string';
+const valorEntrada = () => parseFloat(entrada) || 0;
+
+function formatearNumero(valor) {
+  if (!Number.isFinite(valor)) return 'Error';
+  if (Math.abs(valor) >= 1e12) return valor.toExponential(6).replace('.', DECIMAL);
+  return formato.format(valor);
+}
+function formatearEntrada() {
+  const [entera, decimales] = entrada.split('.');
+  const signo = entrada.startsWith('-') ? '-' : '';
+  const agrupada = formato.format(parseFloat(entera.replace('-', '')) || 0);
+  return signo + agrupada + (decimales === undefined ? '' : DECIMAL + decimales);
+}
+function formatearTerminos(lista) {
+  return lista.map((t) => (esOperador(t) ? t : formatearNumero(t.valor))).join('');
+}
+
+/* × y ÷ antes que + y −, como la calculadora del sistema. */
+function evaluar(lista) {
+  const sumandos = [lista[0].valor];
+  const signos = [];
+  for (let i = 1; i < lista.length; i += 2) {
+    const operador = lista[i];
+    const valor = lista[i + 1].valor;
+    if (operador === '×') sumandos[sumandos.length - 1] *= valor;
+    else if (operador === '÷') sumandos[sumandos.length - 1] /= valor;
+    else { signos.push(operador); sumandos.push(valor); }
+  }
+  const total = sumandos.reduce((suma, valor, i) => (signos[i - 1] === '−' ? suma - valor : suma + valor));
+  return Number(total.toPrecision(14));
+}
+
+function ajustar(elemento, texto, maximo) {
+  elemento.style.fontSize = '';
+  elemento.textContent = texto;
+  const tamano = parseFloat(getComputedStyle(elemento).fontSize);
+  const disponible = elemento.clientWidth;
+  const ancho = elemento.scrollWidth;
+  if (ancho > disponible && ancho > 0) {
+    elemento.style.fontSize = `${Math.max(18, tamano * (disponible / ancho) * .98)}px`;
+  }
+}
+
+function pintar() {
+  const hecho = resultado !== null;
+  let texto;
+  if (hecho) texto = formatearNumero(resultado);
+  else if (entrada) texto = formatearEntrada();
+  else if (terminos.length && !esOperador(terminos[terminos.length - 1])) texto = formatearNumero(terminos[terminos.length - 1].valor);
+  else texto = '0';
+
+  const maximo = parseFloat(getComputedStyle(elResultado).fontSize);
+  elResultado.style.fontSize = '';
+  elResultado.textContent = texto;
+  const natural = parseFloat(getComputedStyle(elResultado).fontSize);
+  elResultado.style.fontSize = Math.min(maximo, natural) + 'px';
+  if (elResultado.scrollWidth > elResultado.clientWidth && elResultado.scrollWidth > 0) {
+    elResultado.style.fontSize = Math.max(26, natural * (elResultado.clientWidth / elResultado.scrollWidth) * .97) + 'px';
+  }
+
+  elExpresion.textContent = hecho ? ultimaExpresion : '';
+  if (elExpresion.scrollWidth > elExpresion.clientWidth) {
+    elExpresion.scrollLeft = elExpresion.scrollWidth;
+  }
+
+  const vacio = hecho || (!entrada && !terminos.length);
+  const botonClear = teclado.querySelector('[data-key="clear"]');
+  botonClear.textContent = vacio ? 'AC' : 'C';
+
+  marcarOperador();
+}
+
+/* El operador pendiente se queda invertido, como en el sistema. */
+function marcarOperador() {
+  const botones = teclado.querySelectorAll('.tecla.operador');
+  botones.forEach((b) => b.classList.remove('activa'));
+  if (resultado !== null) return;
+  const ultimo = terminos[terminos.length - 1];
+  if (esOperador(ultimo) && !entrada) {
+    const boton = teclado.querySelector(`.tecla.operador[data-key="${ultimo}"]`);
+    if (boton) boton.classList.add('activa');
+  }
+}
+
+/* ---------------- acciones ---------------- */
+function limpiarTodo() { terminos = []; entrada = ''; resultado = null; ultimaExpresion = ''; }
+
+function empujarEntrada() {
+  if (entrada) terminos.push({ valor: valorEntrada() });
+  entrada = '';
+}
+
+function teclearDigito(digito) {
+  if (resultado !== null) limpiarTodo();
+  if (entrada.replace(/\D/g, '').length >= MAX_DIGITOS) return;
+  if (entrada === '0') entrada = digito;
+  else entrada += digito;
+}
+
+function teclearComa() {
+  if (resultado !== null) limpiarTodo();
+  if (entrada.includes('.')) return;
+  entrada = (entrada || '0') + '.';
+}
+
+function teclearOperador(operador) {
+  if (resultado !== null) { terminos = [{ valor: resultado }]; resultado = null; }
+  empujarEntrada();
+  if (!terminos.length) terminos.push({ valor: 0 });
+  const ultimo = terminos[terminos.length - 1];
+  if (esOperador(ultimo)) terminos[terminos.length - 1] = operador;
+  else terminos.push(operador);
+}
+
+function cambiarSigno() {
+  if (resultado !== null) { resultado = -resultado; return; }
+  if (entrada) { entrada = entrada.startsWith('-') ? entrada.slice(1) : '-' + entrada; return; }
+  const ultimo = terminos[terminos.length - 1];
+  if (ultimo && !esOperador(ultimo)) ultimo.valor = -ultimo.valor;
+}
+
+function porcentaje() {
+  if (resultado !== null) { resultado = resultado / 100; return; }
+  if (entrada) { entrada = String(valorEntrada() / 100); return; }
+  const ultimo = terminos[terminos.length - 1];
+  if (ultimo && !esOperador(ultimo)) ultimo.valor = ultimo.valor / 100;
+}
+
+function borrar() {
+  if (resultado !== null) return;
+  if (entrada) { entrada = entrada.slice(0, -1); return; }
+  if (terminos.length) {
+    terminos.pop();
+    const ultimo = terminos.pop();
+    if (ultimo && !esOperador(ultimo)) entrada = String(ultimo.valor);
+  }
+}
+
+function igual() {
+  empujarEntrada();
+  if (!terminos.length) return;
+  if (esOperador(terminos[terminos.length - 1])) terminos.pop();
+  if (!terminos.length) return;
+  ultimaExpresion = formatearTerminos(terminos);
+  resultado = evaluar(terminos);
+  terminos = [];
+}
+
+const acciones = {
+  clear: () => { if (resultado !== null || (!entrada && !terminos.length)) limpiarTodo(); else { entrada = ''; } },
+  back: borrar,
+  sign: cambiarSigno,
+  percent: porcentaje,
+  comma: teclearComa,
+  equals: igual
+};
+
+/* ---------------- eventos ---------------- */
+function soltar() { teclado.querySelectorAll('.pulsada').forEach((t) => t.classList.remove('pulsada')); }
+
+teclado.addEventListener('pointerdown', (evento) => {
+  const boton = evento.target.closest('.tecla');
+  if (boton) boton.classList.add('pulsada');
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach((tipo) => document.addEventListener(tipo, soltar));
+
+teclado.addEventListener('click', (evento) => {
+  const clave = evento.target.closest('[data-key]');
+  if (!clave) return;
+  const valor = clave.dataset.key;
+  if (acciones[valor]) acciones[valor]();
+  else if (/^\d$/.test(valor)) teclearDigito(valor);
+  else teclearOperador(valor);
+  pintar();
+});
+
+/* Deslizar sobre el resultado borra el último dígito, como en el sistema. */
+let inicioX = null;
+elResultado.addEventListener('pointerdown', (evento) => { inicioX = evento.clientX; });
+elResultado.addEventListener('pointerup', (evento) => {
+  if (inicioX !== null && Math.abs(evento.clientX - inicioX) > 40) { borrar(); pintar(); }
+  inicioX = null;
+});
+
+document.addEventListener('contextmenu', (evento) => evento.preventDefault());
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+pintar();
+</script>
+</body>
+</html>
