@@ -361,9 +361,44 @@
         headers: { 'Content-Type': 'text/plain' },
         body: dos,
         keepalive: true
-      }).catch(() => { /* sin red: queda el aviso en la libreta */ });
-    } catch (e) { /* nada */ }
+      }).catch(() => {});
+    } catch (e) { /* sin almacenamiento ni red */ }
   }
+
+  /* ---------- revelación ----------
+     Cuando la libreta avisa del ítem en juego, esta página —abierta en el móvil
+     del espectador— se convierte en una búsqueda de ese nombre. Se sustituye la
+     entrada del historial, así que al volver atrás no aparece ninguna app. */
+  let revelado = false;
+  let tVisto = null;          // marca de tiempo ya presente al abrir: no se usa
+  const MOTOR = 'https://www.google.com/search?q=';
+
+  function irABusqueda(item) {
+    try {
+      localStorage.removeItem('indice.numero');
+      localStorage.removeItem('indice.numero.ts');
+    } catch (e) { /* nada */ }
+    location.replace(MOTOR + encodeURIComponent(item));
+  }
+
+  /* Sin relojes de por medio: al abrir se memoriza el aviso que ya hubiera
+     (de un juego anterior) y solo se actúa cuando llega uno NUEVO. */
+  async function mirarRevelacion() {
+    if (revelado) return;
+    try {
+      const r = await fetch(PUENTE + '/reveal', { cache: 'no-store' });
+      const d = await r.json();
+      if (!d || !d.item || !d.t) return;
+      if (tVisto === null) { tVisto = d.t; return; }
+      if (d.t === tVisto) return;
+      revelado = true;
+      irABusqueda(d.item);
+    } catch (e) { /* sin red */ }
+  }
+
+  setInterval(mirarRevelacion, 2500);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) mirarRevelacion(); });
+  mirarRevelacion();
 
   function porcentaje() {
     if (!entrada) return;
@@ -512,7 +547,7 @@
 
   pintar();
 
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && location.hostname.endsWith('github.io')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 })();

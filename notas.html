@@ -551,6 +551,23 @@
     $('#nota-cuerpo').innerHTML = '<span class="titulo">' + escapar(lista.titulo) + '</span>'
       + '<span id="texto-nota">' + escapar(lineas) + '</span>';
     mostrarNota();
+    avisarRevelacion(clave);
+  }
+
+  /* Avisa al móvil del espectador de qué ítem se está jugando: su calculadora
+     se convierte en una búsqueda de ese nombre. */
+  function avisarRevelacion(clave) {
+    const forzado = cfg.forzados[clave];
+    if (!cfg.activo || !forzado || numeroEnJuego() === null) return;
+    const lista = (window.LISTAS[clave] || {}).titulo || clave;
+    try {
+      fetch(PUENTE + '/reveal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item: forzado, lista: lista }),
+        keepalive: true
+      }).catch(() => {});
+    } catch (e) { /* sin red */ }
   }
 
   function abrirTexto(id) {
