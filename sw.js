@@ -1,7 +1,7 @@
 /* Service worker: la app tiene que funcionar en modo avión, en escena.
    HTML: red primero (para recibir cambios), caché como respaldo.
    Resto: caché primero. */
-const CACHE = 'indice-v4';
+const CACHE = 'indice-v6';
 const ARCHIVOS = [
   './notas.html',
   './calculadora.html',
@@ -36,7 +36,12 @@ self.addEventListener('fetch', (evento) => {
   const peticion = evento.request;
   if (peticion.method !== 'GET') return;
 
-  const esHtml = peticion.mode === 'navigate' || /\.html$/i.test(new URL(peticion.url).pathname);
+  /* El puente del número nunca se cachea: tiene que devolver el valor de ahora. */
+  const url = new URL(peticion.url);
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.indexOf('/n-') !== -1) return;
+
+  const esHtml = peticion.mode === 'navigate' || /\.html$/i.test(url.pathname);
 
   if (esHtml) {
     evento.respondWith(

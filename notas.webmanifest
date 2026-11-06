@@ -1,13 +1,15 @@
 {
   "name": "Notas",
   "short_name": "Notas",
+  "id": "./notas.html",
   "start_url": "./notas.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "portrait",
   "icons": [
-    { "src": "notas-icon.png", "sizes": "180x180", "type": "image/png" },
-    { "src": "notas-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    { "src": "notas-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "notas-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "notas-icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
   ]
 }

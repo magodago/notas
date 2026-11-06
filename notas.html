@@ -6,7 +6,7 @@
 <title>Notas</title>
 <meta name="theme-color" content="#000000">
 <link rel="manifest" href="notas.webmanifest">
-<link rel="apple-touch-icon" href="notas-icon.png">
+<link rel="apple-touch-icon" href="notas-180.png">
 <link rel="icon" href="notas-icon.png">
 <style>
   :root {
@@ -379,6 +379,12 @@
   const CLAVE_NUM = 'indice.numero';
   const CLAVE_NOTAS = 'indice.notas.v3';
 
+  /* Puente del número. iOS da a cada app instalada su propia memoria, así que
+     el número que se teclea en la calculadora llega por aquí, sin tocar nada. */
+  const PUENTE = 'https://indice-sync.dortizs76.workers.dev/n-b6f2cea6';
+  let numeroRemoto = null;
+  let remotoCuando = 0;
+
   const $ = (sel, raiz) => (raiz || document).querySelector(sel);
   const escapar = (t) => String(t == null ? '' : t)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -401,12 +407,30 @@
   const guardarCfg = () => { try { localStorage.setItem(CLAVE_CFG, JSON.stringify(cfg)); } catch (e) {} };
 
   function numeroDetectado() {
+    if (numeroRemoto) return numeroRemoto;
     let crudo = null;
     try { crudo = localStorage.getItem(CLAVE_NUM); } catch (e) { return null; }
     if (crudo == null || crudo === '') return null;
     const digitos = String(crudo).replace(/\D/g, '');
     if (!digitos) return null;
     return digitos.slice(-2).padStart(2, '0');
+  }
+
+  async function leerPuente() {
+    try {
+      const r = await fetch(PUENTE, { cache: 'no-store' });
+      if (!r.ok) return false;
+      const d = await r.json();
+      if (!d || !d.n) return false;
+      const dos = String(d.n).replace(/\D/g, '').slice(-2).padStart(2, '0');
+      if (!/^\d{2}$/.test(dos)) return false;
+      numeroRemoto = dos;
+      remotoCuando = d.t || Date.now();
+      try { localStorage.setItem(CLAVE_NUM, dos); } catch (e) { }
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
   function numeroEnJuego() {
     const manual = String(cfg.manual == null ? '' : cfg.manual).replace(/\D/g, '');
@@ -585,8 +609,8 @@
     $('#pie-estado').textContent = estado.join(' ');
 
     $('#pie-diag').textContent = det
-      ? 'Calculadora: ' + det + '. El número llega solo.'
-      : 'Calculadora: sin datos. iOS guarda cada app instalada en su propia memoria, así que el número no viaja entre las dos. Mantén pulsado «...» en la lista y escríbelo.';
+      ? 'Calculadora: ' + det + (numeroRemoto ? ' (recibido por el puente)' : ' (guardado en este móvil)')
+      : 'Calculadora: sin datos todavía. Haz el cálculo en la calculadora de la pantalla de inicio y vuelve aquí: el número entra solo. Si no hay cobertura, manten pulsado «...» y escríbelo.';
   }
 
   let clavePicker = null;
@@ -769,14 +793,22 @@
   });
 
   // El número puede cambiar en la calculadora mientras la app está abierta.
+  async function refrescarNumero() {
+    const traido = await leerPuente();
+    if (!traido) return;
+    if (!$('#hoja-ajustes').hidden) pintarAjustes();
+    if (notaAbierta && notaAbierta.tipo === 'lista') abrirLista(notaAbierta.clave);
+    else if (!$('#p-lista').hidden) pintarLista();
+  }
+
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
-    if (!$('#p-lista').hidden) pintarLista();
-    if (!$('#hoja-ajustes').hidden) pintarAjustes();
+    refrescarNumero();
   });
 
   pintarLista();
   pintarAjustes();
+  refrescarNumero();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});

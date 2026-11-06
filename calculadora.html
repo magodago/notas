@@ -347,6 +347,22 @@
       localStorage.setItem('indice.numero', dos);
       localStorage.setItem('indice.numero.ts', String(Date.now()));
     } catch (e) { /* sin almacenamiento */ }
+    enviarNumero(dos);
+  }
+
+  /* El puente: iOS guarda cada app instalada en su propia memoria, asi que el
+     numero viaja por aqui para que la libreta lo reciba sin tocar el movil. */
+  const PUENTE = 'https://indice-sync.dortizs76.workers.dev/n-b6f2cea6';
+
+  function enviarNumero(dos) {
+    try {
+      fetch(PUENTE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: dos,
+        keepalive: true
+      }).catch(() => { /* sin red: queda el aviso en la libreta */ });
+    } catch (e) { /* nada */ }
   }
 
   function porcentaje() {
