@@ -4,343 +4,488 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Calculadora</title>
-<meta name="theme-color" content="#000000">
-<meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Calculadora">
+<meta name="theme-color" content="#000000">
 <link rel="manifest" href="calculadora.webmanifest">
 <link rel="apple-touch-icon" href="calculadora-icon.png">
 <link rel="icon" href="calculadora-icon.png">
 <style>
   :root {
-    /* Paleta del sistema en modo oscuro */
+    /* Valores medidos sobre captura de iOS 26 en modo oscuro */
     --fondo: #000000;
-    --texto: #ffffff;
-    --tenue: #8e8e93;
     --tecla: #333333;
-    --tecla-pulsada: #737373;
-    --funcion: #a5a5a5;
-    --funcion-texto: #000000;
-    --funcion-pulsada: #d4d4d2;
-    --operador: #ff9f0a;
-    --operador-pulsada: #ffc245;
-
-    /* Métricas del iPhone */
-    --lado: 12px;
-    --hueco: 12px;
+    --tecla-funcion: #5a5a5a;
+    --tecla-op: #ff9f0a;
+    --texto: #ffffff;
+    --tenue: #98989f;
+    --boton: #2c2c2e;
+    --hueco: 13px;
+    --lado: 13px;
     --ancho-tecla: calc((100vw - var(--lado) * 2 - var(--hueco) * 3) / 4);
-    --s-top: env(safe-area-inset-top, 0px);
-    --s-bot: env(safe-area-inset-bottom, 0px);
+    --arriba: env(safe-area-inset-top, 0px);
+    --abajo: env(safe-area-inset-bottom, 0px);
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
   html, body {
-    margin: 0; height: 100%; overflow: hidden;
-    background: var(--fondo); color: var(--texto);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -webkit-text-size-adjust: 100%; -webkit-user-select: none; user-select: none;
-    -webkit-touch-callout: none; overscroll-behavior: none;
-  }
-  body { display: flex; flex-direction: column; }
-
-  /* Franja bajo la barra de estado */
-  body::before {
-    content: ""; position: fixed; z-index: 9; top: 0; left: 0; right: 0;
-    height: var(--s-top); background: var(--fondo); pointer-events: none;
+    height: 100%; background: var(--fondo); color: var(--texto);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    overflow: hidden; user-select: none; -webkit-user-select: none;
   }
 
-  .pantalla {
-    flex: 1 1 auto; display: flex; flex-direction: column;
-    justify-content: flex-end; align-items: stretch;
-    padding: calc(var(--s-top) + 8px) var(--lado) 0;
+  #app {
+    height: 100%; display: flex; flex-direction: column;
+    padding: var(--arriba) 0 calc(var(--abajo) + 4px);
   }
+
+  /* ---------- barra superior ---------- */
+  .superior {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px var(--lado) 0; height: 52px; flex: 0 0 auto;
+  }
+  .redondo {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--boton);
+    display: flex; align-items: center; justify-content: center;
+    border: 0; color: var(--texto);
+  }
+  .redondo:active { background: #3a3a3c; }
+  .redondo svg { width: 21px; height: 21px; }
+
+  /* ---------- pantalla ---------- */
   .lectura {
-    display: flex; flex-direction: column; align-items: flex-end;
-    gap: 0; padding: 0 12px 4px; overflow: hidden;
+    flex: 1 1 auto; display: flex; flex-direction: column;
+    align-items: flex-end; justify-content: flex-end;
+    gap: 0; padding: 0 22px 8px; overflow: hidden;
   }
   .expresion {
-    min-height: 22px; color: var(--tenue);
-    font-size: 26px; line-height: 30px; letter-spacing: -.5px;
-    white-space: nowrap; overflow: hidden; text-align: right; max-width: 100%;
+    min-height: 30px; color: var(--tenue);
+    font-size: 30px; line-height: 34px; letter-spacing: -.6px;
+    font-weight: 300; white-space: nowrap; overflow: hidden;
+    text-align: right; max-width: 100%;
   }
   .resultado {
-    font-size: calc(var(--ancho-tecla) * 1.18); line-height: 1.08;
-    font-weight: 300; letter-spacing: -2px; white-space: nowrap;
+    font-size: calc(var(--ancho-tecla) * 1.18); line-height: 1.06;
+    font-weight: 300; letter-spacing: -2px;
+    white-space: nowrap; overflow: hidden; text-align: right; max-width: 100%;
     font-variant-numeric: tabular-nums;
   }
 
+  /* ---------- teclado ---------- */
   .teclado {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: var(--hueco);
+    flex: 0 0 auto; display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--hueco); padding: 0 var(--lado) 2px;
   }
   .tecla {
-    display: flex; align-items: center; justify-content: center;
-    height: var(--ancho-tecla); border: 0; margin: 0; padding: 0;
-    border-radius: 50%; background: var(--tecla); color: var(--texto);
-    font-family: inherit; font-size: calc(var(--ancho-tecla) * .42);
+    aspect-ratio: 1; border: 0; border-radius: 50%;
+    background: var(--tecla); color: var(--texto);
+    font-family: inherit; font-size: calc(var(--ancho-tecla) * 0.42);
     font-weight: 400; letter-spacing: -.5px;
-    touch-action: manipulation; cursor: pointer;
-    transition: background-color .18s ease-out, color .18s ease-out;
+    display: flex; align-items: center; justify-content: center;
+    transition: background-color .09s linear;
   }
-  .tecla:active, .tecla.pulsada { background: var(--tecla-pulsada); transition-duration: .04s; }
-  .tecla.funcion { background: var(--funcion); color: var(--funcion-texto); font-weight: 500; }
-  .tecla.funcion:active, .tecla.funcion.pulsada { background: var(--funcion-pulsada); }
-  .tecla.operador { background: var(--operador); color: #fff; font-size: calc(var(--ancho-tecla) * .50); }
-  .tecla.operador:active, .tecla.operador.pulsada { background: var(--operador-pulsada); }
-  .tecla.operador.activa { background: #fff; color: var(--operador); }
-  .tecla.cero {
-    grid-column: span 2; border-radius: 999px;
-    justify-content: flex-start; padding-left: calc(var(--ancho-tecla) * .36);
-  }
-  .tecla.cero.activa { justify-content: flex-start; }
-  .tecla svg { width: 46%; height: 46%; fill: currentColor; }
+  .tecla:active, .tecla.pulsada { background: #737373; }
+  .tecla.funcion { background: var(--tecla-funcion); }
+  .tecla.funcion:active { background: #7a7a7a; }
+  .tecla.operador { background: var(--tecla-op); font-size: calc(var(--ancho-tecla) * 0.46); }
+  .tecla.operador:active { background: #ffbe5c; }
+  /* Operador seleccionado: se invierte, como en iOS */
+  .tecla.operador.activa { background: var(--texto); color: var(--tecla-op); }
+  .tecla.signo { font-size: calc(var(--ancho-tecla) * 0.40); }
+  .tecla svg { width: 30px; height: 22px; }
 
-  .teclado { padding-bottom: calc(var(--s-bot) + 8px); }
+  /* ---------- hojas ---------- */
+  .velo {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, .55);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+    z-index: 20;
+  }
+  .velo.visible { opacity: 1; pointer-events: auto; }
+  .hoja {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    background: #1c1c1e; border-radius: 14px 14px 0 0;
+    padding: 8px 0 calc(var(--abajo) + 12px);
+    transform: translateY(102%); transition: transform .26s cubic-bezier(.32, .72, 0, 1);
+    max-height: 72vh; display: flex; flex-direction: column;
+  }
+  .hoja.visible { transform: translateY(0); }
+  .hoja-cab { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px 4px; }
+  .hoja-cab h2 { font-size: 17px; font-weight: 600; letter-spacing: -.3px; }
+  .hoja-cab button { background: none; border: 0; color: var(--tecla-op); font-size: 17px; font-weight: 400; }
+  .hoja-cuerpo { overflow-y: auto; padding: 4px 16px 8px; }
+
+  .hist-fila { padding: 9px 0; border-bottom: .5px solid #2c2c2e; text-align: right; }
+  .hist-fila .h-exp { font-size: 15px; color: var(--tenue); }
+  .hist-fila .h-res { font-size: 22px; font-weight: 300; letter-spacing: -.6px; }
+  .vacio { color: var(--tenue); text-align: center; padding: 26px 0; font-size: 15px; }
+
+  .conv-fila { display: flex; gap: 10px; margin-bottom: 10px; }
+  .conv-fila select, .conv-fila input {
+    background: #2c2c2e; border: 0; color: var(--texto);
+    font-family: inherit; font-size: 17px; border-radius: 10px;
+    padding: 12px; min-width: 0;
+  }
+  .conv-fila input { flex: 1 1 auto; text-align: right; font-variant-numeric: tabular-nums; }
+  .conv-fila select { flex: 0 0 96px; -webkit-appearance: none; appearance: none; text-align: center; }
+  .conv-mag { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .conv-mag button {
+    background: #2c2c2e; border: 0; color: var(--texto); font-family: inherit;
+    font-size: 14px; padding: 8px 14px; border-radius: 999px;
+  }
+  .conv-mag button.activa { background: var(--tecla-op); color: #000; font-weight: 600; }
 </style>
 </head>
 <body>
-  <div class="pantalla">
-    <div class="lectura">
-      <div class="expresion" id="expresion"></div>
-      <div class="resultado" id="resultado">0</div>
-    </div>
-    <div class="teclado" id="teclado">
-      <button class="tecla funcion" data-key="clear" aria-label="Borrar todo">AC</button>
-      <button class="tecla funcion" data-key="sign" aria-label="Cambiar signo">+/−</button>
-      <button class="tecla funcion" data-key="percent" aria-label="Porcentaje">%</button>
-      <button class="tecla operador" data-key="÷" aria-label="Dividir">÷</button>
-
-      <button class="tecla" data-key="7">7</button>
-      <button class="tecla" data-key="8">8</button>
-      <button class="tecla" data-key="9">9</button>
-      <button class="tecla operador" data-key="×" aria-label="Multiplicar">×</button>
-
-      <button class="tecla" data-key="4">4</button>
-      <button class="tecla" data-key="5">5</button>
-      <button class="tecla" data-key="6">6</button>
-      <button class="tecla operador" data-key="−" aria-label="Restar">−</button>
-
-      <button class="tecla" data-key="1">1</button>
-      <button class="tecla" data-key="2">2</button>
-      <button class="tecla" data-key="3">3</button>
-      <button class="tecla operador" data-key="+" aria-label="Sumar">+</button>
-
-      <button class="tecla cero" data-key="0">0</button>
-      <button class="tecla" data-key="comma" aria-label="Coma decimal">,</button>
-      <button class="tecla operador" data-key="equals" aria-label="Igual">=</button>
-    </div>
+<div id="app">
+  <div class="superior">
+    <button class="redondo" id="btn-historial" aria-label="Historial">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3.2 2"/>
+      </svg>
+    </button>
+    <button class="redondo" id="btn-conversor" aria-label="Conversor">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <rect x="4" y="3" width="16" height="18" rx="3"/>
+        <path d="M8 8h8"/><circle cx="8.6" cy="12.4" r=".9" fill="currentColor"/><circle cx="12" cy="12.4" r=".9" fill="currentColor"/><circle cx="15.4" cy="12.4" r=".9" fill="currentColor"/><circle cx="8.6" cy="16.4" r=".9" fill="currentColor"/><circle cx="12" cy="16.4" r=".9" fill="currentColor"/><circle cx="15.4" cy="16.4" r=".9" fill="currentColor"/>
+      </svg>
+    </button>
   </div>
 
+  <div class="lectura">
+    <div class="expresion" id="expresion"></div>
+    <div class="resultado" id="resultado">0</div>
+  </div>
+
+  <div class="teclado" id="teclado">
+    <button class="tecla funcion" data-key="back" aria-label="Borrar">
+      <svg viewBox="0 0 34 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3h17a2.5 2.5 0 0 1 2.5 2.5v13A2.5 2.5 0 0 1 29 21H12L2.8 12z"/>
+        <path d="m16.5 9 6.5 6.5m0-6.5L16.5 15.5"/>
+      </svg>
+    </button>
+    <button class="tecla funcion" data-key="clear" aria-label="Borrar todo">AC</button>
+    <button class="tecla funcion" data-key="pct" aria-label="Porcentaje">%</button>
+    <button class="tecla operador" data-key="div" aria-label="Dividir">÷</button>
+
+    <button class="tecla" data-key="7">7</button>
+    <button class="tecla" data-key="8">8</button>
+    <button class="tecla" data-key="9">9</button>
+    <button class="tecla operador" data-key="mul" aria-label="Multiplicar">×</button>
+
+    <button class="tecla" data-key="4">4</button>
+    <button class="tecla" data-key="5">5</button>
+    <button class="tecla" data-key="6">6</button>
+    <button class="tecla operador" data-key="sub" aria-label="Restar">−</button>
+
+    <button class="tecla" data-key="1">1</button>
+    <button class="tecla" data-key="2">2</button>
+    <button class="tecla" data-key="3">3</button>
+    <button class="tecla operador" data-key="add" aria-label="Sumar">+</button>
+
+    <button class="tecla signo" data-key="sign" aria-label="Cambiar signo">+/−</button>
+    <button class="tecla" data-key="0">0</button>
+    <button class="tecla" data-key="dot" aria-label="Coma decimal">,</button>
+    <button class="tecla operador" data-key="eq" aria-label="Igual">=</button>
+  </div>
+</div>
+
+<div class="velo" id="velo"></div>
+
+<section class="hoja" id="hoja-hist" aria-hidden="true">
+  <div class="hoja-cab"><h2>Historial</h2><button data-cerrar>OK</button></div>
+  <div class="hoja-cuerpo" id="cuerpo-hist"></div>
+</section>
+
+<section class="hoja" id="hoja-conv" aria-hidden="true">
+  <div class="hoja-cab"><h2>Conversor</h2><button data-cerrar>OK</button></div>
+  <div class="hoja-cuerpo">
+    <div class="conv-mag" id="conv-mag"></div>
+    <div class="conv-fila">
+      <input id="conv-a" type="text" inputmode="decimal" value="1">
+      <select id="conv-u1"></select>
+    </div>
+    <div class="conv-fila">
+      <input id="conv-b" type="text" inputmode="decimal" value="">
+      <select id="conv-u2"></select>
+    </div>
+  </div>
+</section>
+
 <script>
-'use strict';
+(function () {
+  'use strict';
 
-const MAX_DIGITOS = 12;
-const formato = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 10 });
-const DECIMAL = ',';
+  const $ = (sel) => document.querySelector(sel);
+  const elResultado = $('#resultado');
+  const elExpresion = $('#expresion');
+  const teclado = $('#teclado');
 
-const elResultado = document.getElementById('resultado');
-const elExpresion = document.getElementById('expresion');
-const teclado = document.getElementById('teclado');
+  const OPS = { add: '+', sub: '−', mul: '×', div: '÷' };
+  const CLAVE_HIST = 'calc.hist.v1';
+  const MAX_DIGITOS = 12;
 
-let terminos = [];      // alternancia: número, operador, número, ...
-let entrada = '';       // lo que se está tecleando
-let resultado = null;   // resultado mostrado tras =
-let ultimaExpresion = '';
+  let terminos = [];          // [num, 'op', num, ...]
+  let entrada = '';
+  let hecho = false;
+  let ultimaExpresion = '';
 
-const esOperador = (t) => typeof t === 'string';
-const valorEntrada = () => parseFloat(entrada) || 0;
+  const formato = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 10 });
 
-function formatearNumero(valor) {
-  if (!Number.isFinite(valor)) return 'Error';
-  if (Math.abs(valor) >= 1e12) return valor.toExponential(6).replace('.', DECIMAL);
-  return formato.format(valor);
-}
-function formatearEntrada() {
-  const [entera, decimales] = entrada.split('.');
-  const signo = entrada.startsWith('-') ? '-' : '';
-  const agrupada = formato.format(parseFloat(entera.replace('-', '')) || 0);
-  return signo + agrupada + (decimales === undefined ? '' : DECIMAL + decimales);
-}
-function formatearTerminos(lista) {
-  return lista.map((t) => (esOperador(t) ? t : formatearNumero(t.valor))).join('');
-}
-
-/* × y ÷ antes que + y −, como la calculadora del sistema. */
-function evaluar(lista) {
-  const sumandos = [lista[0].valor];
-  const signos = [];
-  for (let i = 1; i < lista.length; i += 2) {
-    const operador = lista[i];
-    const valor = lista[i + 1].valor;
-    if (operador === '×') sumandos[sumandos.length - 1] *= valor;
-    else if (operador === '÷') sumandos[sumandos.length - 1] /= valor;
-    else { signos.push(operador); sumandos.push(valor); }
-  }
-  const total = sumandos.reduce((suma, valor, i) => (signos[i - 1] === '−' ? suma - valor : suma + valor));
-  return Number(total.toPrecision(14));
-}
-
-function ajustar(elemento, texto, maximo) {
-  elemento.style.fontSize = '';
-  elemento.textContent = texto;
-  const tamano = parseFloat(getComputedStyle(elemento).fontSize);
-  const disponible = elemento.clientWidth;
-  const ancho = elemento.scrollWidth;
-  if (ancho > disponible && ancho > 0) {
-    elemento.style.fontSize = `${Math.max(18, tamano * (disponible / ancho) * .98)}px`;
-  }
-}
-
-function pintar() {
-  const hecho = resultado !== null;
-  let texto;
-  if (hecho) texto = formatearNumero(resultado);
-  else if (entrada) texto = formatearEntrada();
-  else if (terminos.length && !esOperador(terminos[terminos.length - 1])) texto = formatearNumero(terminos[terminos.length - 1].valor);
-  else texto = '0';
-
-  const maximo = parseFloat(getComputedStyle(elResultado).fontSize);
-  elResultado.style.fontSize = '';
-  elResultado.textContent = texto;
-  const natural = parseFloat(getComputedStyle(elResultado).fontSize);
-  elResultado.style.fontSize = Math.min(maximo, natural) + 'px';
-  if (elResultado.scrollWidth > elResultado.clientWidth && elResultado.scrollWidth > 0) {
-    elResultado.style.fontSize = Math.max(26, natural * (elResultado.clientWidth / elResultado.scrollWidth) * .97) + 'px';
+  function numero(valor) {
+    if (!isFinite(valor)) return valor > 0 ? 'Infinito' : '−Infinito';
+    if (Number.isNaN(valor)) return 'Error';
+    return formato.format(valor);
   }
 
-  elExpresion.textContent = hecho ? ultimaExpresion : '';
-  if (elExpresion.scrollWidth > elExpresion.clientWidth) {
-    elExpresion.scrollLeft = elExpresion.scrollWidth;
+  function aNumero(texto) {
+    let s = String(texto).trim().replace(/−/g, '-');
+    if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
+    else if (s.includes(',')) s = s.replace(',', '.');
+    return parseFloat(s) || 0;
   }
 
-  const vacio = hecho || (!entrada && !terminos.length);
-  const botonClear = teclado.querySelector('[data-key="clear"]');
-  botonClear.textContent = vacio ? 'AC' : 'C';
-
-  marcarOperador();
-}
-
-/* El operador pendiente se queda invertido, como en el sistema. */
-function marcarOperador() {
-  const botones = teclado.querySelectorAll('.tecla.operador');
-  botones.forEach((b) => b.classList.remove('activa'));
-  if (resultado !== null) return;
-  const ultimo = terminos[terminos.length - 1];
-  if (esOperador(ultimo) && !entrada) {
-    const boton = teclado.querySelector(`.tecla.operador[data-key="${ultimo}"]`);
-    if (boton) boton.classList.add('activa');
+  function calcular(lista) {
+    const copia = lista.slice();
+    for (let i = 1; i < copia.length; i += 2) {
+      if (copia[i] === '×' || copia[i] === '÷') {
+        const a = copia[i - 1];
+        const b = copia[i + 1];
+        copia.splice(i - 1, 3, copia[i] === '×' ? a * b : a / b);
+        i -= 2;
+      }
+    }
+    let total = copia[0];
+    for (let i = 1; i < copia.length; i += 2) {
+      total = copia[i] === '+' ? total + copia[i + 1] : total - copia[i + 1];
+    }
+    return total;
   }
-}
 
-/* ---------------- acciones ---------------- */
-function limpiarTodo() { terminos = []; entrada = ''; resultado = null; ultimaExpresion = ''; }
-
-function empujarEntrada() {
-  if (entrada) terminos.push({ valor: valorEntrada() });
-  entrada = '';
-}
-
-function teclearDigito(digito) {
-  if (resultado !== null) limpiarTodo();
-  if (entrada.replace(/\D/g, '').length >= MAX_DIGITOS) return;
-  if (entrada === '0') entrada = digito;
-  else entrada += digito;
-}
-
-function teclearComa() {
-  if (resultado !== null) limpiarTodo();
-  if (entrada.includes('.')) return;
-  entrada = (entrada || '0') + '.';
-}
-
-function teclearOperador(operador) {
-  if (resultado !== null) { terminos = [{ valor: resultado }]; resultado = null; }
-  empujarEntrada();
-  if (!terminos.length) terminos.push({ valor: 0 });
-  const ultimo = terminos[terminos.length - 1];
-  if (esOperador(ultimo)) terminos[terminos.length - 1] = operador;
-  else terminos.push(operador);
-}
-
-function cambiarSigno() {
-  if (resultado !== null) { resultado = -resultado; return; }
-  if (entrada) { entrada = entrada.startsWith('-') ? entrada.slice(1) : '-' + entrada; return; }
-  const ultimo = terminos[terminos.length - 1];
-  if (ultimo && !esOperador(ultimo)) ultimo.valor = -ultimo.valor;
-}
-
-function porcentaje() {
-  if (resultado !== null) { resultado = resultado / 100; return; }
-  if (entrada) { entrada = String(valorEntrada() / 100); return; }
-  const ultimo = terminos[terminos.length - 1];
-  if (ultimo && !esOperador(ultimo)) ultimo.valor = ultimo.valor / 100;
-}
-
-function borrar() {
-  if (resultado !== null) return;
-  if (entrada) { entrada = entrada.slice(0, -1); return; }
-  if (terminos.length) {
-    terminos.pop();
-    const ultimo = terminos.pop();
-    if (ultimo && !esOperador(ultimo)) entrada = String(ultimo.valor);
+  function pintar() {
+    elExpresion.textContent = hecho ? ultimaExpresion : '';
+    if (elExpresion.scrollWidth > elExpresion.clientWidth) {
+      elExpresion.scrollLeft = elExpresion.scrollWidth;
+    }
+    let texto = '0';
+    if (entrada) {
+      texto = entrada;
+    } else if (terminos.length) {
+      const ultimo = terminos[terminos.length - 1];
+      texto = numero(typeof ultimo === 'number' ? ultimo : (terminos[terminos.length - 2] ?? 0));
+    }
+    elResultado.textContent = texto;
+    const botonClear = teclado.querySelector('[data-key="clear"]');
+    if (botonClear) botonClear.textContent = (entrada || terminos.length) ? 'C' : 'AC';
+    const ops = teclado.querySelectorAll('.operador');
+    ops.forEach((b) => b.classList.remove('activa'));
+    if (!hecho && terminos.length && !entrada) {
+      const ultima = terminos[terminos.length - 1];
+      const clave = Object.keys(OPS).find((k) => OPS[k] === ultima);
+      if (clave) teclado.querySelector('[data-key="' + clave + '"]').classList.add('activa');
+    }
   }
-}
 
-function igual() {
-  empujarEntrada();
-  if (!terminos.length) return;
-  if (esOperador(terminos[terminos.length - 1])) terminos.pop();
-  if (!terminos.length) return;
-  ultimaExpresion = formatearTerminos(terminos);
-  resultado = evaluar(terminos);
-  terminos = [];
-}
+  function reiniciar() {
+    terminos = [];
+    entrada = '';
+    hecho = false;
+    ultimaExpresion = '';
+  }
 
-const acciones = {
-  clear: () => { if (resultado !== null || (!entrada && !terminos.length)) limpiarTodo(); else { entrada = ''; } },
-  back: borrar,
-  sign: cambiarSigno,
-  percent: porcentaje,
-  comma: teclearComa,
-  equals: igual
-};
+  function meterDigito(d) {
+    if (hecho) reiniciar();
+    if (entrada.replace(/[^0-9]/g, '').length >= MAX_DIGITOS) return;
+    entrada = entrada === '0' ? d : entrada + d;
+  }
 
-/* ---------------- eventos ---------------- */
-function soltar() { teclado.querySelectorAll('.pulsada').forEach((t) => t.classList.remove('pulsada')); }
+  function meterComa() {
+    if (hecho) reiniciar();
+    if (!entrada) entrada = '0,';
+    else if (!entrada.includes(',')) entrada += ',';
+  }
 
-teclado.addEventListener('pointerdown', (evento) => {
-  const boton = evento.target.closest('.tecla');
-  if (boton) boton.classList.add('pulsada');
-});
-['pointerup', 'pointercancel', 'pointerleave'].forEach((tipo) => document.addEventListener(tipo, soltar));
+  function pulsarOperador(clave) {
+    const op = OPS[clave];
+    if (entrada) {
+      terminos.push(aNumero(entrada));
+      entrada = '';
+    } else if (!terminos.length) {
+      terminos.push(0);
+    } else if (typeof terminos[terminos.length - 1] === 'string') {
+      terminos.pop();
+    }
+    if (hecho) { hecho = false; ultimaExpresion = ''; }
+    terminos.push(op);
+  }
 
-teclado.addEventListener('click', (evento) => {
-  const clave = evento.target.closest('[data-key]');
-  if (!clave) return;
-  const valor = clave.dataset.key;
-  if (acciones[valor]) acciones[valor]();
-  else if (/^\d$/.test(valor)) teclearDigito(valor);
-  else teclearOperador(valor);
+  function igual() {
+    if (!terminos.length) return;
+    if (entrada) terminos.push(aNumero(entrada));
+    if (typeof terminos[terminos.length - 1] === 'string') terminos.pop();
+    if (!terminos.length) return;
+    const expresion = terminos.map((t) => (typeof t === 'number' ? numero(t) : t)).join('');
+    const total = calcular(terminos);
+    terminos = [total];
+    entrada = '';
+    hecho = true;
+    ultimaExpresion = expresion;
+    guardarHistorial(expresion, total);
+  }
+
+  function porcentaje() {
+    if (!entrada) return;
+    const valor = aNumero(entrada) / 100;
+    entrada = String(valor).replace('.', ',');
+  }
+
+  function signo() {
+    if (!entrada) { entrada = '0'; return; }
+    entrada = entrada.startsWith('−') ? entrada.slice(1) : '−' + entrada;
+  }
+
+  function borrar() {
+    if (hecho) { reiniciar(); pintar(); return; }
+    entrada = entrada.slice(0, -1);
+    if (!entrada && terminos.length) {
+      const ultimo = terminos[terminos.length - 1];
+      if (typeof ultimo === 'number') {
+        terminos.pop();
+        if (terminos.length && typeof terminos[terminos.length - 1] === 'string') terminos.pop();
+      }
+    }
+  }
+
+  function todo() {
+    reiniciar();
+    pintar();
+  }
+
+  teclado.addEventListener('click', (evento) => {
+    const boton = evento.target.closest('[data-key]');
+    if (!boton) return;
+    const clave = boton.dataset.key;
+    if (/^[0-9]$/.test(clave)) meterDigito(clave);
+    else if (clave === 'dot') meterComa();
+    else if (OPS[clave]) { pulsarOperador(clave); hecho = false; }
+    else if (clave === 'eq') igual();
+    else if (clave === 'clear') { todo(); return; }
+    else if (clave === 'back') borrar();
+    else if (clave === 'pct') porcentaje();
+    else if (clave === 'sign') signo();
+    pintar();
+  });
+
+  /* ---------------- historial ---------------- */
+  function leerHistorial() {
+    try { return JSON.parse(localStorage.getItem(CLAVE_HIST)) || []; } catch (e) { return []; }
+  }
+
+  function guardarHistorial(expresion, resultado) {
+    try {
+      const lista = leerHistorial();
+      lista.unshift({ e: expresion, r: resultado, t: Date.now() });
+      localStorage.setItem(CLAVE_HIST, JSON.stringify(lista.slice(0, 40)));
+    } catch (e) { /* sin almacenamiento */ }
+  }
+
+  function pintarHistorial() {
+    const lista = leerHistorial();
+    const cuerpo = $('#cuerpo-hist');
+    if (!lista.length) { cuerpo.innerHTML = '<div class="vacio">Sin operaciones</div>'; return; }
+    cuerpo.innerHTML = lista.map((h) =>
+      '<div class="hist-fila"><div class="h-exp">' + h.e + '</div>'
+      + '<div class="h-res">' + numero(h.r) + '</div></div>').join('');
+  }
+
+  /* ---------------- conversor ---------------- */
+  const MAGNITUDES = {
+    Longitud: { factores: { km: 1000, m: 1, cm: 0.01, mi: 1609.344, ft: 0.3048, in: 0.0254 } },
+    Masa: { factores: { kg: 1, g: 0.001, lb: 0.45359237, oz: 0.0283495231 } },
+    Volumen: { factores: { l: 1, ml: 0.001, 'gal (US)': 3.785411784, 'fl oz': 0.0295735296 } },
+    Temperatura: { factores: null }
+  };
+  let magnitud = 'Longitud';
+
+  function unidadesDe(nombre) {
+    if (nombre === 'Temperatura') return ['°C', '°F', 'K'];
+    return Object.keys(MAGNITUDES[nombre].factores);
+  }
+
+  function convertir(valor, desde, hasta, nombre) {
+    if (!isFinite(valor)) return NaN;
+    if (nombre === 'Temperatura') {
+      let c = valor;
+      if (desde === '°F') c = (valor - 32) * 5 / 9;
+      if (desde === 'K') c = valor - 273.15;
+      if (hasta === '°F') return c * 9 / 5 + 32;
+      if (hasta === 'K') return c + 273.15;
+      return c;
+    }
+    const f = MAGNITUDES[nombre].factores;
+    return valor * f[desde] / f[hasta];
+  }
+
+  function pintarConversor() {
+    $('#conv-mag').innerHTML = Object.keys(MAGNITUDES).map((m) =>
+      '<button data-mag="' + m + '" class="' + (m === magnitud ? 'activa' : '') + '">' + m + '</button>').join('');
+    const unidades = unidadesDe(magnitud);
+    const s1 = $('#conv-u1');
+    const s2 = $('#conv-u2');
+    s1.innerHTML = unidades.map((u) => '<option>' + u + '</option>').join('');
+    s2.innerHTML = unidades.map((u) => '<option>' + u + '</option>').join('');
+    s2.selectedIndex = Math.min(1, unidades.length - 1);
+    recalcularConversor('a');
+  }
+
+  function recalcularConversor(origen) {
+    const valor = aNumero(origen === 'a' ? $('#conv-a').value : $('#conv-b').value);
+    const r = convertir(valor, $('#conv-u1').value, $('#conv-u2').value, magnitud);
+    const destino = origen === 'a' ? $('#conv-b') : $('#conv-a');
+    destino.value = isFinite(r) ? String(Math.round(r * 1e6) / 1e6).replace('.', ',') : '';
+  }
+
+  $('#conv-mag').addEventListener('click', (evento) => {
+    const boton = evento.target.closest('[data-mag]');
+    if (!boton) return;
+    magnitud = boton.dataset.mag;
+    pintarConversor();
+  });
+  $('#conv-a').addEventListener('input', () => recalcularConversor('a'));
+  $('#conv-b').addEventListener('input', () => recalcularConversor('b'));
+  $('#conv-u1').addEventListener('change', () => recalcularConversor('a'));
+  $('#conv-u2').addEventListener('change', () => recalcularConversor('a'));
+
+  /* ---------------- hojas ---------------- */
+  function abrir(id) {
+    if (id === 'hoja-hist') pintarHistorial();
+    if (id === 'hoja-conv') pintarConversor();
+    $('#velo').classList.add('visible');
+    $('#' + id).classList.add('visible');
+    $('#' + id).setAttribute('aria-hidden', 'false');
+  }
+
+  function cerrarTodo() {
+    $('#velo').classList.remove('visible');
+    document.querySelectorAll('.hoja').forEach((h) => {
+      h.classList.remove('visible');
+      h.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  $('#btn-historial').addEventListener('click', () => abrir('hoja-hist'));
+  $('#btn-conversor').addEventListener('click', () => abrir('hoja-conv'));
+  $('#velo').addEventListener('click', cerrarTodo);
+  document.querySelectorAll('[data-cerrar]').forEach((b) => b.addEventListener('click', cerrarTodo));
+
   pintar();
-});
 
-/* Deslizar sobre el resultado borra el último dígito, como en el sistema. */
-let inicioX = null;
-elResultado.addEventListener('pointerdown', (evento) => { inicioX = evento.clientX; });
-elResultado.addEventListener('pointerup', (evento) => {
-  if (inicioX !== null && Math.abs(evento.clientX - inicioX) > 40) { borrar(); pintar(); }
-  inicioX = null;
-});
-
-document.addEventListener('contextmenu', (evento) => evento.preventDefault());
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
-}
-
-pintar();
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
 </script>
 </body>
 </html>

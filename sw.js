@@ -1,11 +1,15 @@
-/* Service worker: la app tiene que funcionar en modo avión, en escena. */
-const CACHE = 'indice-v1';
+/* Service worker: la app tiene que funcionar en modo avión, en escena.
+   HTML: red primero (para recibir cambios), caché como respaldo.
+   Resto: caché primero. */
+const CACHE = 'indice-v2';
 const ARCHIVOS = [
   './notas.html',
   './calculadora.html',
   './data.js',
   './notas.webmanifest',
-  './calculadora.webmanifest'
+  './calculadora.webmanifest',
+  './notas-icon.png',
+  './calculadora-icon.png'
 ];
 
 self.addEventListener('install', (evento) => {
@@ -21,15 +25,29 @@ self.addEventListener('activate', (evento) => {
 });
 
 self.addEventListener('fetch', (evento) => {
-  if (evento.request.method !== 'GET') return;
+  const peticion = evento.request;
+  if (peticion.method !== 'GET') return;
+
+  const esHtml = peticion.mode === 'navigate' || /\.html(\?|$)/.test(new URL(peticion.url).pathname);
+
+  if (esHtml) {
+    evento.respondWith(
+      fetch(peticion)
+        .then((respuesta) => {
+          const copia = respuesta.clone();
+          caches.open(CACHE).then((c) => c.put(peticion, copia));
+          return respuesta;
+        })
+        .catch(() => caches.match(peticion).then((r) => r || caches.match('./notas.html')))
+    );
+    return;
+  }
+
   evento.respondWith(
-    caches.match(evento.request, { ignoreSearch: true }).then((guardado) => {
-      if (guardado) return guardado;
-      return fetch(evento.request).then((respuesta) => {
-        const copia = respuesta.clone();
-        caches.open(CACHE).then((c) => c.put(evento.request, copia)).catch(() => {});
-        return respuesta;
-      }).catch(() => caches.match('./notas.html'));
-    })
+    caches.match(peticion).then((guardada) => guardada || fetch(peticion).then((respuesta) => {
+      const copia = respuesta.clone();
+      caches.open(CACHE).then((c) => c.put(peticion, copia));
+      return respuesta;
+    }))
   );
 });
