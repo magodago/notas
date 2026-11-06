@@ -232,6 +232,7 @@
   let entrada = '';
   let hecho = false;
   let ultimaExpresion = '';
+  let ultimaOp = null;        // { op, operando } para repetir al pulsar = otra vez
 
   const formato = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 10 });
 
@@ -278,6 +279,7 @@
       texto = numero(typeof ultimo === 'number' ? ultimo : (terminos[terminos.length - 2] ?? 0));
     }
     elResultado.textContent = texto;
+    ajustarResultado();
     const botonClear = teclado.querySelector('[data-key="clear"]');
     if (botonClear) botonClear.textContent = (entrada || terminos.length) ? 'C' : 'AC';
     const ops = teclado.querySelectorAll('.operador');
@@ -289,11 +291,26 @@
     }
   }
 
+  function ajustarResultado() {
+    elResultado.style.fontSize = '';
+    const caja = elResultado.parentElement;
+    const estilo = getComputedStyle(caja);
+    const tope = caja.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight);
+    let tam = parseFloat(getComputedStyle(elResultado).fontSize) || 70;
+    let vueltas = 0;
+    while (elResultado.scrollWidth > tope && tam > 20 && vueltas < 80) {
+      tam *= 0.93;
+      elResultado.style.fontSize = tam + 'px';
+      vueltas += 1;
+    }
+  }
+
   function reiniciar() {
     terminos = [];
     entrada = '';
     hecho = false;
     ultimaExpresion = '';
+    ultimaOp = null;
   }
 
   function meterDigito(d) {
@@ -324,17 +341,37 @@
 
   function igual() {
     if (!terminos.length) return;
-    if (entrada) terminos.push(aNumero(entrada));
-    if (typeof terminos[terminos.length - 1] === 'string') terminos.pop();
-    if (!terminos.length) return;
-    const expresion = terminos.map((t) => (typeof t === 'number' ? numero(t) : t)).join('');
-    const total = calcular(terminos);
+    let expresion;
+    let total;
+    if (hecho && !entrada && ultimaOp) {
+      const base = terminos[terminos.length - 1];
+      const b = ultimaOp.operando;
+      expresion = numero(base) + ultimaOp.op + numero(b);
+      total = calcular([base, ultimaOp.op, b]);
+    } else {
+      if (entrada) terminos.push(aNumero(entrada));
+      if (typeof terminos[terminos.length - 1] === 'string') terminos.pop();
+      if (!terminos.length) return;
+      expresion = terminos.map((t) => (typeof t === 'number' ? numero(t) : t)).join('');
+      total = calcular(terminos);
+      ultimaOp = recordarOperacion(terminos);
+    }
     terminos = [total];
     entrada = '';
     hecho = true;
     ultimaExpresion = expresion;
     guardarHistorial(expresion, total);
     guardarNumeroJuego(total);
+  }
+
+  /* La ultima operacion de la cadena, para poder repetirla con = como hace iOS. */
+  function recordarOperacion(lista) {
+    for (let i = lista.length - 2; i >= 1; i -= 1) {
+      if (typeof lista[i] === 'string' && typeof lista[i + 1] === 'number') {
+        return { op: lista[i], operando: lista[i + 1] };
+      }
+    }
+    return null;
   }
 
   /* Las dos últimas cifras del resultado son el número que se juega en la libreta.
@@ -355,15 +392,22 @@
      numero viaja por aqui para que la libreta lo reciba sin tocar el movil. */
   const PUENTE = 'https://indice-sync.dortizs76.workers.dev/n-b6f2cea6';
 
+  /* Se envia el ultimo valor, no todos: si el espectador pulsa = varias veces
+     seguidas, solo cuenta el que queda en pantalla. */
+  let envioPendiente = null;
   function enviarNumero(dos) {
-    try {
-      fetch(PUENTE, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: dos,
-        keepalive: true
-      }).catch(() => {});
-    } catch (e) { /* sin almacenamiento ni red */ }
+    if (envioPendiente) clearTimeout(envioPendiente);
+    envioPendiente = setTimeout(() => {
+      envioPendiente = null;
+      try {
+        fetch(PUENTE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: dos,
+          keepalive: true
+        }).catch(() => {});
+      } catch (e) { /* sin red */ }
+    }, 180);
   }
 
   /* ---------- revelación ----------
