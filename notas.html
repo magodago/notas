@@ -462,6 +462,7 @@
     return notasSemilla();
   }
   let notas = leerNotas();
+  setTimeout(() => publicarForzados(), 800);
   const guardarNotas = () => { try { localStorage.setItem(CLAVE_NOTAS, JSON.stringify(notas)); } catch (e) {} };
 
   /* ---------- las 99 entradas con el forzado colocado ---------- */
@@ -571,6 +572,18 @@
         keepalive: true
       }).catch(() => {});
     } catch (e) { /* sin red */ }
+  }
+
+  /* Publica el mapa de forzados para que la cámara sepa qué escribir. */
+  function publicarForzados() {
+    try {
+      fetch(PUENTE + '/forzados', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mapa: cfg.forzados || {} }),
+        keepalive: true
+      }).catch(() => {});
+    } catch (e) {}
   }
 
   let temporizadorTexto = null;
@@ -798,6 +811,7 @@
       else delete cfg.forzados[clavePicker];
       cfg.activo = true;
       guardarCfg();
+      publicarForzados();
       $('#hoja-picker').hidden = true;
       pintarAjustes();
       return;
