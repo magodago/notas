@@ -627,7 +627,8 @@
       guardarNotas();
       clearTimeout(temporizadorTexto);
       notaPendiente = nota;
-      temporizadorTexto = setTimeout(() => { if (notaPendiente) { enviarTexto(notaPendiente); notaPendiente = null; } }, 4000);
+      // 5 s sin teclear = el texto ya esta: se manda a la app de Musica
+      temporizadorTexto = setTimeout(() => { if (notaPendiente) { enviarTexto(notaPendiente); notaPendiente = null; } }, 5000);
     }
     et.addEventListener('focus', () => {
       if (et.classList.contains('vacio')) { et.textContent = ''; et.classList.remove('vacio'); }
