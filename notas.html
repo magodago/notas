@@ -584,6 +584,7 @@
   function abrirLista(clave) {
     const lista = window.LISTAS[clave];
     const items = entradasDe(clave);
+    limpiarMarcas(clave);
     const hechas = marcasDe(clave);
     notaAbierta = { tipo: 'lista', clave: clave };
     $('#nota-fecha').textContent = fechaLarga(HOY);
@@ -614,6 +615,18 @@
       lista.forEach(function (i) { res[i] = 1; });
       return res;
     } catch (e) { return {}; }
+  }
+
+  /* Cada vez que se entra en una lista arranca limpia: las marcas son solo de
+     la visita en curso, no se heredan de la vez anterior. */
+  function limpiarMarcas(clave) {
+    try {
+      const todo = JSON.parse(localStorage.getItem('indice.marcas.v1') || '{}') || {};
+      if (Object.prototype.hasOwnProperty.call(todo, clave)) {
+        delete todo[clave];
+        localStorage.setItem('indice.marcas.v1', JSON.stringify(todo));
+      }
+    } catch (e) { /* sin almacén */ }
   }
 
   function guardarMarca(clave, i, puesta) {

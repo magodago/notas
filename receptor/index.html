@@ -341,10 +341,12 @@
     location.replace(u);
   }
 
-  /* Igual que las fotos: el tráiler se busca en el YouTube de verdad. */
+  /* Igual que las fotos: la búsqueda de vídeos se abre en el Google de verdad.
+     No se usa youtube.com porque iOS secuestra ese dominio y abre la app, y al
+     volver a Safari seguiría a la vista nuestra página. */
   function youtubeReal(q) {
     fotoQ = String(q || '').replace(/\s+tr[aá]iler.*$/i, '');
-    var u = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
+    var u = 'https://www.google.com/search?hl=es&gl=es&tbm=vid&q=' + encodeURIComponent(q);
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
     location.replace(u);
   }
