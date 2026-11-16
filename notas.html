@@ -581,6 +581,7 @@
           + '<span class="ct">' + escapar(t) + '</span></button>';
       }).join('') + '</div>';
     mostrarNota();
+    avisarRevelacion(clave);
     const rej = $('#rejilla');
     if (rej) {
       rej.addEventListener('click', function (ev) {
