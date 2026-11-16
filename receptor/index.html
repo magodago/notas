@@ -77,6 +77,23 @@
   #nota pre { margin: 0; font-family: inherit; font-size: 19px; line-height: 1.55; white-space: pre-wrap; }
 
   /* --- panel oculto --- */
+  /* El tráiler y las fotos se ven DENTRO de la app: nunca se sale de ella,
+     así no queda rastro de la pantalla que estaba esperando. */
+  #video { position: fixed; inset: 0; background: #000; z-index: 76; display: none; }
+  #video.on { display: block; }
+  #video iframe { width: 100%; height: 100%; border: 0; display: block; }
+  #fotos { position: fixed; inset: 0; background: #0b0b0d; color: #e8e8ea; z-index: 76;
+    display: none; flex-direction: column; }
+  #fotos.on { display: flex; }
+  #fotos .cab { padding: max(16px, env(safe-area-inset-top)) 16px 10px; font-size: 15px;
+    color: #9a9aa2; letter-spacing: .2px; }
+  #fotos .rej { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch;
+    column-count: 3; column-gap: 6px;
+    padding: 0 8px calc(18px + env(safe-area-inset-bottom)); }
+  #fotos .rej.una { column-count: 1; padding: 0 10px 20px; }
+  #fotos img { width: 100%; margin: 0 0 6px; border-radius: 12px; display: block;
+    background: #17171b; break-inside: avoid; }
+
   #panel { position: fixed; inset: 0; background: #0b0b0d; color: #e8e8ea; z-index: 70;
     display: none; flex-direction: column; padding: max(48px, env(safe-area-inset-top)) 20px 24px; overflow: auto; }
   #panel.on { display: flex; }
@@ -113,6 +130,10 @@
   <span class="titulo" id="nota-titulo">Notas</span>
   <pre id="nota-cuerpo"></pre>
 </div>
+
+<div id="video"><iframe id="marco" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+
+<div id="fotos"><div class="cab" id="fotos-cab"></div><div class="rej" id="fotos-rej"></div></div>
 
 <div id="panel">
   <h1>Receptor</h1>
@@ -244,28 +265,99 @@
   }
 
   function destino(lista, item) {
-    var q = encodeURIComponent(item);
-    if (lista === 'musicos')     return { tipo: 'youtube', url: 'https://www.youtube.com/results?search_query=' + q };
-    if (lista === 'peliculas')   return { tipo: 'youtube', url: 'https://www.youtube.com/results?search_query=' + q + '%20trailer%20espa%C3%B1ol' };
-    if (lista === 'videojuegos') return { tipo: 'youtube', url: 'https://www.youtube.com/results?search_query=' + q + '%20trailer' };
-    if (lista === 'famosos' || lista === 'objetos')
-      return { tipo: 'google', url: 'https://www.google.com/search?tbm=isch&q=' + q };
-    return { tipo: 'google', url: 'https://www.google.com/search?q=' + q };
+    if (lista === 'musicos')     return { tipo: 'youtube', q: item };
+    if (lista === 'peliculas')   return { tipo: 'youtube', q: item + ' trailer español' };
+    if (lista === 'videojuegos') return { tipo: 'youtube', q: item + ' trailer' };
+    return { tipo: 'fotos', q: item };
   }
 
-  function salta(d) {
-    var marca = $('#marca'), txt = $('#marca-txt'), salto = $('#salto');
-    if (d.tipo === 'youtube') {
-      marca.className = 'marca';
-      txt.innerHTML = '';
-    } else {
-      marca.className = 'marca google';
-      marca.innerHTML = '';
-      txt.innerHTML = '<span class="g1">G</span><span class="g2">o</span><span class="g3">o</span>'
-        + '<span class="g1">g</span><span class="g4">l</span><span class="g2">e</span>';
+  /* El tráiler se incrusta en la propia app: se busca su identificador y se
+     reproduce aquí dentro. No se abre ninguna página ni se sale de la app. */
+  function abrirVideo(q) {
+    var marco = $('#marco');
+    $('#fotos').classList.remove('on');
+    $('#video').classList.add('on');
+    $('#velo').classList.add('oculto');
+    function poner(id) {
+      marco.src = 'https://www.youtube-nocookie.com/embed/' + id +
+        '?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1';
     }
-    salto.classList.add('on');
-    setTimeout(function () { location.href = d.url; }, 620);
+    var guardado = localStorage.getItem('r.v.' + q);
+    if (guardado && guardado.length === 11) return poner(guardado);
+    fetch(PUENTE + '/ver/yt?q=' + encodeURIComponent(q), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.id) { localStorage.setItem('r.v.' + q, j.id); poner(j.id); }
+        else respaldo('https://www.youtube.com/results?search_query=' + encodeURIComponent(q));
+      })
+      .catch(function () {
+        respaldo('https://www.youtube.com/results?search_query=' + encodeURIComponent(q));
+      });
+  }
+
+  function respaldo(url) { location.replace(url); }
+
+  /* Las fotos también se ven dentro: rejilla sobre fondo negro, sin salir.
+     Primero la imagen del artículo y después fotos de Wikimedia. */
+  var NO_FOTO = /(drawing|sketch|dibujo|croquis|logo|coat[_ ]of[_ ]arms|escudo|stamp|sello|seal|map\b|mapa|signature|firma|poster|cartel|banknote|billete)/i;
+
+  function abrirFotos(q) {
+    var rej = $('#fotos-rej');
+    $('#video').classList.remove('on');
+    $('#fotos').classList.add('on');
+    $('#velo').classList.add('oculto');
+    $('#fotos-cab').textContent = q;
+    rej.innerHTML = '';
+    rej.className = 'rej';
+    var vistos = {}, puestas = 0;
+
+    function mete(src, alt) {
+      if (!src || puestas >= 15) return;
+      if (NO_FOTO.test(alt || '') || NO_FOTO.test(src)) return;
+      var raiz = src.split('/').pop().split('?')[0];
+      if (vistos[raiz]) return;
+      vistos[raiz] = 1;
+      var im = document.createElement('img');
+      im.src = src; im.loading = puestas < 6 ? 'eager' : 'lazy'; im.alt = alt || '';
+      rej.appendChild(im);
+      puestas++;
+    }
+
+    function ajusta() { rej.className = puestas <= 2 ? 'rej una' : 'rej'; }
+
+    var art = 'https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=' +
+      encodeURIComponent(q) +
+      '&gsrlimit=8&prop=pageimages&piprop=thumbnail&pithumbsize=900&format=json&origin=*';
+    var com = 'https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=' +
+      encodeURIComponent(q) +
+      '&gsrnamespace=6&gsrlimit=24&prop=imageinfo&iiprop=url|mime&iiurlwidth=800&format=json&origin=*';
+
+    fetch(art, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      var pags = (j && j.query && j.query.pages) ? j.query.pages : {};
+      var pals = sinTildes(q).toLowerCase().split(/\s+/).filter(function (w) { return w.length > 2; });
+      Object.keys(pags).map(function (k) { return pags[k]; })
+        .sort(function (x, y) { return (x.index || 99) - (y.index || 99); })
+        .forEach(function (x) {
+          var src = x.thumbnail && x.thumbnail.source;
+          if (!src) return;
+          var tit = sinTildes(x.title || '').toLowerCase();
+          if (pals.length && !pals.every(function (w) { return tit.indexOf(w) >= 0; })) return;
+          mete(src, x.title);
+        });
+      ajusta();
+    }).catch(function () {});
+
+    fetch(com, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      var pags = (j && j.query && j.query.pages) ? j.query.pages : {};
+      Object.keys(pags).map(function (k) { return pags[k]; })
+        .sort(function (x, y) { return (x.index || 99) - (y.index || 99); })
+        .forEach(function (x) {
+          var inf = x.imageinfo && x.imageinfo[0];
+          if (!inf || !/jpeg|png/.test(inf.mime || '')) return;
+          mete(inf.thumburl || inf.url, (x.title || '').replace(/^File:/, ''));
+        });
+      ajusta();
+    }).catch(function () {});
   }
 
   function pintaNota(texto) {
@@ -290,7 +382,8 @@
       return pintaCarta(c);
     }
     cerrojo = false;
-    salta(destino(lista, d.item));
+    var m = destino(lista, d.item);
+    if (m.tipo === 'youtube') abrirVideo(m.q); else abrirFotos(m.q);
   }
 
   /* ---------------- espera ---------------- */
@@ -368,10 +461,27 @@
   }
 
   /* ---------------- arranque: un toque y a escuchar ---------------- */
+  /* El toque de ACTIVAR se aprovecha para dejar el navegador con permiso de
+     sonido: así el tráiler entra solo, sin que el espectador toque nada. */
+  var CEBO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+  function cebarAudio() {
+    try {
+      var a = new Audio(CEBO);
+      a.volume = 1;
+      a.play().then(function () { setTimeout(function () { try { a.pause(); } catch (e) {} }, 400); })
+             .catch(function () {});
+    } catch (e) {}
+    try {
+      var C = window.AudioContext || window.webkitAudioContext;
+      if (C) { var ac = new C(); if (ac.state === 'suspended') ac.resume(); }
+    } catch (e) {}
+  }
+
   $('#activar').addEventListener('click', function (e) {
     e.stopPropagation();
     if (activado) return;
     activado = true;
+    cebarAudio();
     arranque = Date.now() - 1500;
     $('#velo').classList.add('arrancado');
     video();
