@@ -346,7 +346,7 @@
      volver a Safari seguiría a la vista nuestra página. */
   function youtubeReal(q) {
     fotoQ = String(q || '').replace(/\s+tr[aá]iler.*$/i, '');
-    var u = 'https://www.google.com/search?hl=es&gl=es&tbm=vid&q=' + encodeURIComponent(q);
+    var u = 'https://www.google.com/search?hl=es&gl=es&udm=7&q=' + encodeURIComponent(q);
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
     location.replace(u);
   }
