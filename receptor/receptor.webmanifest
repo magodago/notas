@@ -1,0 +1,14 @@
+{
+  "name": "Notas",
+  "short_name": "Notas",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "../notas-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../notas-180.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

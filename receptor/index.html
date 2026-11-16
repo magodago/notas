@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>Notas</title>
+<link rel="manifest" href="receptor.webmanifest">
+<link rel="apple-touch-icon" href="../notas-icon-512.png">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+  #velo { position: fixed; inset: 0; background: #000; display: flex; align-items: center;
+    justify-content: center; z-index: 50; transition: opacity .35s ease; }
+  #velo.oculto { opacity: 0; pointer-events: none; }
+  .late { width: 7px; height: 7px; border-radius: 50%; background: #1c1c1e; transition: background .6s ease; }
+  .late.vivo { background: #1f6b3a; }
+  .late.malo { background: #6b1f24; }
+
+  /* --- pantalla de transición hacia YouTube / Google --- */
+  #salto { position: fixed; inset: 0; background: #fff; display: none; align-items: center;
+    justify-content: center; flex-direction: column; gap: 18px; z-index: 60; }
+  #salto.on { display: flex; }
+  #salto .marca { width: 76px; height: 54px; border-radius: 14px; background: #f00;
+    display: flex; align-items: center; justify-content: center; }
+  #salto .marca.google { background: #fff; width: auto; height: auto; }
+  #salto .tri { width: 0; height: 0; border-left: 20px solid #fff;
+    border-top: 13px solid transparent; border-bottom: 13px solid transparent; margin-left: 6px; }
+  #salto .palabra { font-size: 30px; letter-spacing: -.5px; color: #111; font-weight: 500; }
+  #salto .g1 { color: #4285f4 } #salto .g2 { color: #ea4335 } #salto .g3 { color: #fbbc05 } #salto .g4 { color: #34a853 }
+  #salto .barra { width: 120px; height: 3px; border-radius: 2px; background: #eee; overflow: hidden; }
+  #salto .barra i { display: block; height: 100%; width: 40%; background: #bbb;
+    animation: correr 1s linear infinite; }
+  @keyframes correr { from { transform: translateX(-100%) } to { transform: translateX(320%) } }
+
+  /* --- carta --- */
+  #carta { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    background: radial-gradient(120% 80% at 50% 0%, #14161a 0%, #000 70%); z-index: 55; }
+  #carta.on { display: flex; }
+  .naipes { width: min(74vw, 46vh); aspect-ratio: 2.6 / 3.6; background: #fff; border-radius: 16px;
+    position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.7); color: #111;
+    display: flex; align-items: center; justify-content: center;
+    animation: entrar .45s cubic-bezier(.2,.9,.2,1); }
+  @keyframes entrar { from { transform: scale(.82) rotate(-6deg); opacity: 0 } to { transform: none; opacity: 1 } }
+  .naipes.rojo { color: #c8102e; }
+  .naipes .palo { font-size: min(30vw, 19vh); line-height: 1; }
+  .naipes .esq { position: absolute; font-size: min(7vw, 4.4vh); font-weight: 700; line-height: .95;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .naipes .esq.a { top: 14px; left: 14px; }
+  .naipes .esq.b { bottom: 14px; right: 14px; transform: rotate(180deg); }
+
+  /* --- nota (mesóstico) --- */
+  #nota { position: fixed; inset: 0; display: none; padding: max(56px, env(safe-area-inset-top)) 26px 40px;
+    background: #fff; color: #111; z-index: 54; overflow: auto; }
+  #nota.on { display: block; }
+  #nota .fecha { font-size: 13px; color: #8a8a8e; margin-bottom: 14px; }
+  #nota .titulo { display: block; font-size: 22px; font-weight: 700; margin-bottom: 16px; }
+  #nota pre { margin: 0; font-family: inherit; font-size: 19px; line-height: 1.55; white-space: pre-wrap; }
+
+  /* --- panel oculto --- */
+  #panel { position: fixed; inset: 0; background: #0b0b0d; color: #e8e8ea; z-index: 70;
+    display: none; flex-direction: column; padding: max(48px, env(safe-area-inset-top)) 20px 24px; overflow: auto; }
+  #panel.on { display: flex; }
+  #panel h1 { font-size: 17px; font-weight: 600; margin: 0 0 4px; }
+  #panel p { font-size: 13px; color: #8a8a90; margin: 0 0 18px; line-height: 1.5; }
+  #panel .fila { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  #panel button { flex: 1 1 30%; padding: 11px 8px; border-radius: 10px; border: 1px solid #26262b;
+    background: #17171b; color: #e8e8ea; font-size: 13px; font-family: inherit; }
+  #panel .dato { font-size: 12px; color: #6f6f76; font-variant-numeric: tabular-nums; }
+  #panel .cerrar { align-self: flex-start; padding: 9px 16px; }
+</style>
+</head>
+<body>
+
+<div id="velo"><div class="late" id="late"></div></div>
+
+<div id="salto"><div class="marca" id="marca"><div class="tri"></div></div>
+  <div class="palabra" id="marca-txt"></div>
+  <div class="barra"><i></i></div>
+</div>
+
+<div id="carta"><div class="naipes" id="naipes">
+  <div class="esq a"><span class="r"></span><span class="p"></span></div>
+  <div class="palo"></div>
+  <div class="esq b"><span class="r"></span><span class="p"></span></div>
+</div></div>
+
+<div id="nota"><div class="fecha" id="nota-fecha"></div>
+  <span class="titulo" id="nota-titulo">Notas</span>
+  <pre id="nota-cuerpo"></pre>
+</div>
+
+<div id="panel">
+  <h1>Receptor</h1>
+  <p>Móvil en espera. Pantalla encendida, sin sonido. Si quieres salir del modo espera, cierra la pestaña.</p>
+  <div class="fila" id="pruebas"></div>
+  <div class="dato" id="estado">—</div>
+  <div class="fila" style="margin-top:18px"><button class="cerrar" id="cerrar">Volver a negro</button></div>
+</div>
+
+<video id="vigia" muted loop playsinline webkit-playsinline preload="auto" style="position:fixed;width:1px;height:1px;opacity:0.01;pointer-events:none;left:0;bottom:0">
+  <source src="silencio.mp4" type="video/mp4">
+</video>
+
+<script>
+(function () {
+  'use strict';
+  var PUENTE = 'https://indice-sync.dortizs76.workers.dev/n-b6f2cea6';
+  var $ = function (s) { return document.querySelector(s); };
+
+  var ultimoReveal = Number(localStorage.getItem('r.lt') || 0);
+  var ultimoTexto  = Number(localStorage.getItem('r.lx') || 0);
+  var arranque = Date.now() - 3000;   // solo se representa lo que llega con la app ya abierta
+
+  var visto = 0;
+  var cerrojo = false;
+
+  /* ---------------- pantalla encendida ---------------- */
+  var vigia = $('#vigia');
+  function video() {
+    try { vigia.play().catch(function () {}); } catch (e) {}
+  }
+  var wl = null;
+  async function despierto() {
+    video();
+    try {
+      if ('wakeLock' in navigator) {
+        wl = await navigator.wakeLock.request('screen');
+        wl.addEventListener('release', function () { wl = null; setTimeout(despierto, 900); });
+      }
+    } catch (e) { /* sin wake lock: queda el vídeo */ }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) { despierto(); mirar(); }
+  });
+  document.addEventListener('touchstart', function () { video(); }, { passive: true, once: false });
+
+  /* ---------------- utilidades ---------------- */
+  function sinTildes(t) {
+    return String(t || '').toLowerCase()
+      .replace(/[áàäâ]/g, 'a').replace(/[éèëê]/g, 'e').replace(/[íìïî]/g, 'i')
+      .replace(/[óòöô]/g, 'o').replace(/[úùüû]/g, 'u').replace(/ñ/g, 'n').trim();
+  }
+
+  var PALOS = {
+    'picas': { simbolo: '\u2660', rojo: false },
+    'corazones': { simbolo: '\u2665', rojo: true },
+    'diamantes': { simbolo: '\u2666', rojo: true },
+    'treboles': { simbolo: '\u2663', rojo: false },
+    'rombos': { simbolo: '\u2666', rojo: true },
+    'espadas': { simbolo: '\u2660', rojo: false },
+    'oros': { simbolo: '\u25cf', rojo: false },
+    'copas': { simbolo: '\u222a', rojo: true },
+    'bastos': { simbolo: '\u2726', rojo: false }
+  };
+  var CARTAS_EN = {
+    'as':'A','a':'A','uno':'A',
+    'dos':'2','tres':'3','cuatro':'4','cinco':'5','seis':'6','siete':'7','ocho':'8','nueve':'9','diez':'10',
+    'jota':'J','sota':'J','j':'J',
+    'caballo':'Q','reina':'Q','dama':'Q','q':'Q',
+    'rey':'K','k':'K'
+  };
+
+  /* Baraja francesa en orden fijo: 0-12 picas, 13-25 corazones, 26-38 diamantes, 39-51 tréboles */
+  function cartaPorIndice(i) {
+    var palos = ['picas', 'corazones', 'diamantes', 'treboles'];
+    var rangos = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+    var p = Math.floor(i / 13), r = i % 13;
+    if (p < 0 || p > 3) return null;
+    return { rango: rangos[r], palo: palos[p] };
+  }
+  function cartaDeTexto(txt) {
+    var t = sinTildes(txt).replace(/\s+de\s+/g, ' ').replace(/\s+/g, ' ').trim();
+    var partes = t.split(' ');
+    if (partes.length < 2) return null;
+    var palo = null, rango = null;
+    for (var i = 0; i < partes.length; i++) {
+      var norm = partes[i];
+      if (PALOS[norm]) palo = norm;
+      else if (CARTAS_EN[norm]) rango = CARTAS_EN[norm];
+      else if (/^[2-9]$|^10$/.test(norm)) rango = norm;
+    }
+    if (palo && rango) return { rango: rango, palo: palo };
+    return null;
+  }
+
+  /* ---------------- presentadores ---------------- */
+  function pintaCarta(c) {
+    var info = PALOS[c.palo] || { simbolo: '?', rojo: false };
+    var n = $('#naipes');
+    n.classList.toggle('rojo', !!info.rojo);
+    n.querySelector('.palo').textContent = info.simbolo;
+    Array.prototype.forEach.call(n.querySelectorAll('.r'), function (e) { e.textContent = c.rango; });
+    Array.prototype.forEach.call(n.querySelectorAll('.p'), function (e) { e.textContent = info.simbolo; });
+    $('#carta').classList.add('on');
+    $('#velo').classList.add('oculto');
+  }
+
+  function destino(lista, item) {
+    var q = encodeURIComponent(item);
+    if (lista === 'musicos')     return { tipo: 'youtube', url: 'https://www.youtube.com/results?search_query=' + q };
+    if (lista === 'peliculas')   return { tipo: 'youtube', url: 'https://www.youtube.com/results?search_query=' + q + '%20trailer%20espa%C3%B1ol' };
+    if (lista === 'videojuegos') return { tipo: 'youtube', url: 'https://www.youtube.com/results?search_query=' + q + '%20trailer' };
+    if (lista === 'famosos' || lista === 'objetos')
+      return { tipo: 'google', url: 'https://www.google.com/search?tbm=isch&q=' + q };
+    return { tipo: 'google', url: 'https://www.google.com/search?q=' + q };
+  }
+
+  function salta(d) {
+    var marca = $('#marca'), txt = $('#marca-txt'), salto = $('#salto');
+    if (d.tipo === 'youtube') {
+      marca.className = 'marca';
+      txt.innerHTML = '';
+    } else {
+      marca.className = 'marca google';
+      marca.innerHTML = '';
+      txt.innerHTML = '<span class="g1">G</span><span class="g2">o</span><span class="g3">o</span>'
+        + '<span class="g1">g</span><span class="g4">l</span><span class="g2">e</span>';
+    }
+    salto.classList.add('on');
+    setTimeout(function () { location.href = d.url; }, 620);
+  }
+
+  function pintaNota(texto) {
+    $('#nota-fecha').textContent = new Date().toLocaleDateString('es-ES',
+      { day: 'numeric', month: 'long', year: 'numeric' });
+    $('#nota-cuerpo').textContent = texto;
+    $('#nota').classList.add('on');
+    $('#velo').classList.add('oculto');
+  }
+
+  function presentar(d) {
+    if (cerrojo) return;
+    cerrojo = true;
+    var lista = sinTildes(d.lista);
+    if (lista === 'cartas' || lista === 'baraja') {
+      var n = (typeof d.indice === 'number' && d.indice >= 0 && d.indice < 52)
+        ? d.indice
+        : (Number(d.numero) >= 0 && Number(d.numero) < 52 ? Number(d.numero) : null);
+      var c = n !== null ? cartaPorIndice(n) : cartaDeTexto(d.item);
+      cerrojo = false;
+      if (!c) return pintaNota(d.item);
+      return pintaCarta(c);
+    }
+    cerrojo = false;
+    salta(destino(lista, d.item));
+  }
+
+  /* ---------------- espera ---------------- */
+  function pinta(n) {
+    visto = n;
+    var l = $('#late');
+    l.classList.toggle('vivo', true);
+    l.classList.remove('malo');
+    $('#estado').textContent = 'Conectado · ' + n + ' comprobaciones · último aviso '
+      + (ultimoReveal ? new Date(ultimoReveal).toLocaleTimeString('es-ES') : 'nunca');
+  }
+
+  var fallos = 0;
+  async function mirar() {
+    try {
+      var r = await fetch(PUENTE + '/reveal', { cache: 'no-store' });
+      var d = await r.json();
+      fallos = 0;
+      if (d && d.t && d.t > ultimoReveal) {
+        ultimoReveal = d.t;
+        localStorage.setItem('r.lt', String(d.t));
+        if (d.item && d.t > arranque) presentar(d);
+      }
+    } catch (e) { fallos++; if (fallos > 4) $('#late').className = 'late malo'; }
+
+    try {
+      var r2 = await fetch(PUENTE + '/texto', { cache: 'no-store' });
+      var d2 = await r2.json();
+      if (d2 && d2.t && d2.t > ultimoTexto && d2.texto) {
+        ultimoTexto = d2.t;
+        localStorage.setItem('r.lx', String(d2.t));
+        pintaNota(d2.texto);
+      }
+    } catch (e) {}
+
+    pinta((visto || 0) + 1);
+  }
+
+  /* ---------------- panel oculto: 3 toques ---------------- */
+  var toques = 0, relojToques = 0;
+  $('#velo').addEventListener('click', function () {
+    toques++;
+    clearTimeout(relojToques);
+    relojToques = setTimeout(function () { toques = 0; }, 700);
+    if (toques >= 3) { toques = 0; $('#panel').classList.add('on'); }
+  });
+  $('#cerrar').addEventListener('click', function () { $('#panel').classList.remove('on'); });
+
+  var PRUEBAS = [
+    ['Músicos', { lista: 'musicos', item: 'queen' }],
+    ['Películas', { lista: 'peliculas', item: 'el padrino' }],
+    ['Videojuegos', { lista: 'videojuegos', item: 'zelda breath of the wild' }],
+    ['Famosos', { lista: 'famosos', item: 'penelope cruz' }],
+    ['Objetos', { lista: 'objetos', item: 'reloj de pulsera' }],
+    ['Cartas', { lista: 'cartas', item: 'reina de corazones', indice: 11 }]
+  ];
+  $('#pruebas').innerHTML = PRUEBAS.map(function (p, i) {
+    return '<button data-p="' + i + '">' + p[0] + '</button>';
+  }).join('');
+  $('#pruebas').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-p]');
+    if (!b) return;
+    $('#panel').classList.remove('on');
+    $('#carta').classList.remove('on');
+    $('#nota').classList.remove('on');
+    presentar(PRUEBAS[Number(b.dataset.p)][1]);
+  });
+
+  /* ---------------- demo por URL: ?demo=cartas&item=... ---------------- */
+  var qs = new URLSearchParams(location.search);
+  if (qs.get('demo')) {
+    var demo = { lista: qs.get('demo'), item: qs.get('item') || 'as de espadas',
+                 indice: qs.get('i') !== null ? Number(qs.get('i')) : undefined };
+    setTimeout(function () { presentar(demo); }, 250);
+  }
+
+  despierto();
+  mirar();
+  setInterval(mirar, 1200);
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
