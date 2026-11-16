@@ -60,40 +60,40 @@
   .circulo svg { width: 20px; height: 20px; display: block; }
   .titulo-cab { text-align: center; flex: 1 1 auto; min-width: 0; }
   .titulo-cab .t1 {
-    font-size: 17px; font-weight: 600; letter-spacing: -.4px; line-height: 21px;
+    font-size: 18px; font-weight: 600; letter-spacing: -.4px; line-height: 23px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     -webkit-user-select: none; user-select: none;
   }
-  .titulo-cab .t2 { font-size: 12px; color: var(--texto-2); line-height: 16px; letter-spacing: -.1px; }
+  .titulo-cab .t2 { font-size: 13px; color: var(--texto-2); line-height: 17px; letter-spacing: -.1px; }
 
   .contenido { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 108px; }
   .sec-cab {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 16px 8px; font-size: 22px; font-weight: 700; letter-spacing: -.5px;
+    padding: 10px 16px 8px; font-size: 24px; font-weight: 700; letter-spacing: -.5px;
   }
   .sec-cab svg { width: 16px; height: 16px; color: var(--texto-2); }
-  .sec-cab2 { font-size: 17px; font-weight: 600; padding-top: 18px; }
+  .sec-cab2 { font-size: 18px; font-weight: 600; padding-top: 18px; }
   .tarjeta {
     margin: 0 16px 8px; background: var(--tarjeta); border-radius: 12px; overflow: hidden;
   }
-  .fila { display: block; width: 100%; text-align: left; padding: 9px 16px 10px; position: relative; }
+  .fila { display: block; width: 100%; text-align: left; padding: 11px 16px 12px; position: relative; }
   .fila:active { background: rgba(120,120,128,.14); }
   .fila + .fila::before {
     content: ""; position: absolute; top: 0; left: 16px; right: 0;
     height: .5px; background: var(--sep);
   }
   .fila-titulo {
-    font-size: 17px; font-weight: 600; letter-spacing: -.4px; line-height: 22px;
+    font-size: 18px; font-weight: 600; letter-spacing: -.4px; line-height: 24px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fila-meta {
-    font-size: 15px; line-height: 20px; color: var(--texto-2); letter-spacing: -.2px;
+    font-size: 17px; line-height: 23px; color: var(--texto-2); letter-spacing: -.2px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fila-meta .fecha { color: var(--texto-2); }
   .fila-carpeta {
     display: flex; align-items: center; gap: 5px; margin-top: 1px;
-    font-size: 13px; line-height: 18px; color: var(--texto-2);
+    font-size: 14px; line-height: 19px; color: var(--texto-2);
   }
   .fila-carpeta svg { width: 14px; height: 14px; flex: 0 0 auto; }
 
@@ -129,17 +129,17 @@
     letter-spacing: -.1px;
   }
   .cuerpo-nota {
-    font-size: 17px; line-height: 23px; letter-spacing: -.3px;
+    font-size: 20px; line-height: 29px; letter-spacing: -.2px;
     white-space: pre-wrap; word-break: break-word; outline: none;
     -webkit-user-select: text; user-select: text;
   }
   .cuerpo-nota .titulo {
-    display: block; font-size: 22px; font-weight: 700; line-height: 28px;
+    display: block; font-size: 26px; font-weight: 700; line-height: 33px;
     letter-spacing: -.5px; margin-bottom: 10px;
   }
   .cuerpo-nota [contenteditable] { outline: none; -webkit-user-select: text; user-select: text; }
   .cuerpo-nota .titulo.vacio { color: var(--texto-2); }
-  #ed-cuerpo { display: block; min-height: 45vh; white-space: pre-wrap; font-size: 17px; line-height: 24px; }
+  #ed-cuerpo { display: block; min-height: 45vh; white-space: pre-wrap; font-size: 20px; line-height: 30px; letter-spacing: -.2px; }
 
   /* ---------- rejilla de la lista: cada nombre es una fila que se toca ---------- */
   .rejilla { display: block; margin: 6px 0 0; }
@@ -159,7 +159,7 @@
     color: var(--texto-2); letter-spacing: -.2px;
   }
   .casilla .ct {
-    min-width: 0; font-size: 16px; line-height: 23px; letter-spacing: -.2px;
+    min-width: 0; font-size: 17px; line-height: 25px; letter-spacing: -.2px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .casilla.marcada { background: none; color: var(--texto); }
@@ -879,7 +879,10 @@
     if (lista) { abrirLista(lista.dataset.lista); return; }
 
     const nota = evento.target.closest('[data-nota]');
-    if (nota) { abrirTexto(nota.dataset.nota); return; }
+    if (nota) {
+      if (pulsacionLarga) { pulsacionLarga = false; return; }
+      abrirTexto(nota.dataset.nota); return;
+    }
 
     const forzar = evento.target.closest('[data-forzar]');
     if (forzar) { abrirPicker(forzar.dataset.forzar); return; }
@@ -895,6 +898,35 @@
       pintarAjustes();
       return;
     }
+  });
+
+  /* ---------- borrar una nota del home: pulsación larga ---------- */
+  function borrarNota(id) {
+    const i = notas.findIndex((x) => x.id === id);
+    if (i < 0) return;
+    if (!confirm('¿Borrar esta nota?')) return;
+    notas.splice(i, 1);
+    guardarNotas();
+    pintarLista();
+  }
+
+  let relojPulsacion = null;
+  let pulsacionLarga = false;
+
+  document.addEventListener('pointerdown', (evento) => {
+    const fila = evento.target.closest('[data-nota]');
+    if (!fila) return;
+    pulsacionLarga = false;
+    clearTimeout(relojPulsacion);
+    relojPulsacion = setTimeout(() => {
+      pulsacionLarga = true;
+      if (navigator.vibrate) navigator.vibrate(18);
+      borrarNota(fila.dataset.nota);
+    }, 650);
+  }, { passive: true });
+
+  ['pointerup', 'pointermove', 'pointercancel', 'pointerleave', 'scroll'].forEach((tipo) => {
+    document.addEventListener(tipo, () => clearTimeout(relojPulsacion), { passive: true });
   });
 
   $('#volver-nota').addEventListener('click', () => {
