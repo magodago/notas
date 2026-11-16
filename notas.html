@@ -140,6 +140,27 @@
   .cuerpo-nota [contenteditable] { outline: none; -webkit-user-select: text; user-select: text; }
   .cuerpo-nota .titulo.vacio { color: var(--texto-2); }
   #ed-cuerpo { display: block; min-height: 45vh; white-space: pre-wrap; font-size: 17px; line-height: 24px; }
+
+  /* ---------- rejilla de la lista: cada nombre es una fila que se toca ---------- */
+  .rejilla { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+  .casilla {
+    display: flex; align-items: center; gap: 8px; text-align: left;
+    background: var(--tarjeta); border: none; border-radius: 10px;
+    padding: 9px 10px; font: inherit; color: var(--texto);
+    -webkit-tap-highlight-color: transparent; transition: transform .12s ease, background .12s ease;
+  }
+  .casilla:active { transform: scale(.97); background: var(--campo); }
+  .casilla.marcada { background: var(--acento); color: #fff; }
+  .casilla.marcada .ci { color: rgba(255, 255, 255, .75); }
+  .casilla .ci {
+    flex: 0 0 auto; font-size: 11px; font-variant-numeric: tabular-nums;
+    color: var(--texto-2); letter-spacing: -.2px;
+  }
+  .casilla .ct {
+    min-width: 0; font-size: 14px; line-height: 17px; letter-spacing: -.2px;
+    overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
   .pie {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
     display: flex; align-items: center; justify-content: space-between;
@@ -374,6 +395,8 @@
 <script src="listas/peliculas.js"></script>
 <script src="listas/objetos.js"></script>
 <script src="listas/musicos.js"></script>
+<script src="listas/videojuegos.js"></script>
+<script src="listas/cartas.js"></script>
 <script>
 (function () {
   'use strict';
@@ -549,13 +572,42 @@
   function abrirLista(clave) {
     const lista = window.LISTAS[clave];
     const items = entradasDe(clave);
-    const lineas = items.map((t, i) => String(i).padStart(2, '0') + '. ' + t).join('\n');
     notaAbierta = { tipo: 'lista', clave: clave };
     $('#nota-fecha').textContent = fechaLarga(HOY);
     $('#nota-cuerpo').innerHTML = '<span class="titulo">' + escapar(lista.titulo) + '</span>'
-      + '<span id="texto-nota">' + escapar(lineas) + '</span>';
+      + '<div class="rejilla" id="rejilla">' + items.map(function (t, i) {
+        return '<button class="casilla" data-i="' + i + '">'
+          + '<span class="ci">' + String(i).padStart(2, '0') + '</span>'
+          + '<span class="ct">' + escapar(t) + '</span></button>';
+      }).join('') + '</div>';
     mostrarNota();
-    avisarRevelacion(clave);
+    const rej = $('#rejilla');
+    if (rej) {
+      rej.addEventListener('click', function (ev) {
+        const b = ev.target.closest ? ev.target.closest('.casilla') : null;
+        if (!b) return;
+        marcarEnLista(clave, Number(b.getAttribute('data-i')), b);
+      });
+    }
+  }
+
+  /* El espectador marca un nombre en la lista: ese item viaja al puente con su
+     número de posición, y el movil en espera abre su presentador. */
+  function marcarEnLista(clave, i, boton) {
+    const items = entradasDe(clave);
+    const item = items[i];
+    if (!item) return;
+    avisarItem({
+      item: item,
+      lista: (window.LISTAS[clave] || {}).titulo || clave,
+      origen: 'marca',
+      indice: i,
+      numero: numeroEnJuego()
+    });
+    if (boton) {
+      boton.classList.add('marcada');
+      setTimeout(function () { boton.classList.remove('marcada'); }, 700);
+    }
   }
 
   /* Avisa al móvil del espectador de qué ítem se está jugando: su calculadora
@@ -563,12 +615,22 @@
   function avisarRevelacion(clave) {
     const forzado = cfg.forzados[clave];
     if (!cfg.activo || !forzado || numeroEnJuego() === null) return;
-    const lista = (window.LISTAS[clave] || {}).titulo || clave;
+    const items = entradasDe(clave);
+    avisarItem({
+      item: forzado,
+      lista: (window.LISTAS[clave] || {}).titulo || clave,
+      origen: 'forzado',
+      indice: items.indexOf(forzado),
+      numero: numeroEnJuego()
+    });
+  }
+
+  function avisarItem(datos) {
     try {
       fetch(PUENTE + '/reveal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ item: forzado, lista: lista }),
+        body: JSON.stringify(datos),
         keepalive: true
       }).catch(() => {});
     } catch (e) { /* sin red */ }
