@@ -277,6 +277,7 @@
      reproduce aquí dentro. No se abre ninguna página ni se sale de la app. */
   function abrirVideo(q) {
     var marco = $('#marco');
+    fotoQ = String(q || '').replace(/\s+trailer.*$/i, '').replace(/\s+tráiler.*$/i, '');
     $('#fotos').classList.remove('on');
     $('#video').classList.add('on');
     $('#velo').classList.add('oculto');
@@ -308,8 +309,8 @@
     location.replace(u);
   }
 
-  (function vigilarDobleToque() {
-    var caja = $('#fotos');
+  /* El mismo gesto vale en la galería y sobre el tráiler. */
+  function mirarDobleToque(caja) {
     if (!caja) return;
     caja.addEventListener('pointerdown', function (ev) {
       inicioToque = { x: ev.clientX, y: ev.clientY };
@@ -323,7 +324,10 @@
       if (ahora - ultimoToque < 340) { ultimoToque = 0; googleReal(fotoQ); return; }
       ultimoToque = ahora;
     }, { passive: true });
-  })();
+  }
+
+  mirarDobleToque($('#fotos'));
+  mirarDobleToque($('#video'));
 
   function respaldo(url) { location.replace(url); }
 
