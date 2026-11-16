@@ -18,37 +18,48 @@
     -webkit-user-select: none; user-select: none; touch-action: manipulation; }
   #velo { position: fixed; inset: 0; background: #000; display: flex; align-items: center;
     justify-content: center; z-index: 50; transition: opacity .35s ease; }
+  /* --- arranque --- */
   #velo.oculto { opacity: 0; pointer-events: none; }
-  .late { width: 7px; height: 7px; border-radius: 50%; background: #1c1c1e; transition: background .6s ease; }
+  .inicio { display: flex; flex-direction: column; align-items: center; gap: 26px;
+    transition: opacity .5s ease; }
+  #velo.arrancado .inicio { opacity: 0; pointer-events: none; }
+  .inicio .sigilo { font-size: 26px; color: #2a2a30; letter-spacing: 6px; }
+  #activar { font-family: inherit; font-size: 15px; letter-spacing: .18em; text-transform: uppercase;
+    color: #d9cba3; background: rgba(217,203,163,.06); border: 1px solid rgba(217,203,163,.35);
+    padding: 16px 34px; border-radius: 40px; transition: all .3s ease; }
+  #activar:active { background: rgba(217,203,163,.16); border-color: rgba(217,203,163,.7); }
+  .late { width: 7px; height: 7px; border-radius: 50%; background: #1c1c1e; transition: background .6s ease;
+    margin-top: 6px; }
   .late.vivo { background: #1f6b3a; }
   .late.malo { background: #6b1f24; }
 
-  /* --- pantalla de transición hacia YouTube / Google --- */
-  #salto { position: fixed; inset: 0; background: #fff; display: none; align-items: center;
-    justify-content: center; flex-direction: column; gap: 18px; z-index: 60; }
+  /* --- pantalla de transición hacia YouTube / Google (oscura) --- */
+  #salto { position: fixed; inset: 0; background: #0a0a0c; display: none; align-items: center;
+    justify-content: center; flex-direction: column; gap: 18px; z-index: 60; color: #cfc7b4; }
   #salto.on { display: flex; }
-  #salto .marca { width: 76px; height: 54px; border-radius: 14px; background: #f00;
-    display: flex; align-items: center; justify-content: center; }
-  #salto .marca.google { background: #fff; width: auto; height: auto; }
-  #salto .tri { width: 0; height: 0; border-left: 20px solid #fff;
-    border-top: 13px solid transparent; border-bottom: 13px solid transparent; margin-left: 6px; }
-  #salto .palabra { font-size: 30px; letter-spacing: -.5px; color: #111; font-weight: 500; }
-  #salto .g1 { color: #4285f4 } #salto .g2 { color: #ea4335 } #salto .g3 { color: #fbbc05 } #salto .g4 { color: #34a853 }
-  #salto .barra { width: 120px; height: 3px; border-radius: 2px; background: #eee; overflow: hidden; }
-  #salto .barra i { display: block; height: 100%; width: 40%; background: #bbb;
+  #salto .marca { width: 76px; height: 54px; border-radius: 14px; background: #1a1a1f;
+    border: 1px solid #2a2a31; display: flex; align-items: center; justify-content: center; }
+  #salto .marca.google { background: #14141a; width: 76px; height: 54px; }
+  #salto .tri { width: 0; height: 0; border-left: 18px solid #8e8778;
+    border-top: 12px solid transparent; border-bottom: 12px solid transparent; margin-left: 5px; }
+  #salto .palabra { font-size: 22px; letter-spacing: .22em; text-transform: uppercase; color: #6f6a60; font-weight: 500; }
+  #salto .g1 { color: #5b6a86 } #salto .g2 { color: #8a5a5a } #salto .g3 { color: #8a7c50 } #salto .g4 { color: #52705c }
+  #salto .barra { width: 120px; height: 2px; border-radius: 2px; background: #1b1b21; overflow: hidden; }
+  #salto .barra i { display: block; height: 100%; width: 40%; background: #3a3a44;
     animation: correr 1s linear infinite; }
   @keyframes correr { from { transform: translateX(-100%) } to { transform: translateX(320%) } }
 
-  /* --- carta --- */
+  /* --- carta (oscura, para no deslumbrar) --- */
   #carta { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
-    background: radial-gradient(120% 80% at 50% 0%, #14161a 0%, #000 70%); z-index: 55; }
+    background: radial-gradient(120% 80% at 50% 0%, #101014 0%, #000 70%); z-index: 55; }
   #carta.on { display: flex; }
-  .naipes { width: min(74vw, 46vh); aspect-ratio: 2.6 / 3.6; background: #fff; border-radius: 16px;
-    position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.7); color: #111;
+  .naipes { width: min(74vw, 46vh); aspect-ratio: 2.6 / 3.6; background: #16161c;
+    border: 1px solid #2c2c34; border-radius: 16px;
+    position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.9); color: #e6dfcd;
     display: flex; align-items: center; justify-content: center;
     animation: entrar .45s cubic-bezier(.2,.9,.2,1); }
   @keyframes entrar { from { transform: scale(.82) rotate(-6deg); opacity: 0 } to { transform: none; opacity: 1 } }
-  .naipes.rojo { color: #c8102e; }
+  .naipes.rojo { color: #c9564f; }
   .naipes .palo { font-size: min(30vw, 19vh); line-height: 1; }
   .naipes .esq { position: absolute; font-size: min(7vw, 4.4vh); font-weight: 700; line-height: .95;
     display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -57,10 +68,10 @@
 
   /* --- nota (mesóstico) --- */
   #nota { position: fixed; inset: 0; display: none; padding: max(56px, env(safe-area-inset-top)) 26px 40px;
-    background: #fff; color: #111; z-index: 54; overflow: auto; }
+    background: #0a0a0c; color: #ddd6c6; z-index: 54; overflow: auto; }
   #nota.on { display: block; }
-  #nota .fecha { font-size: 13px; color: #8a8a8e; margin-bottom: 14px; }
-  #nota .titulo { display: block; font-size: 22px; font-weight: 700; margin-bottom: 16px; }
+  #nota .fecha { font-size: 13px; color: #5f5f68; margin-bottom: 14px; }
+  #nota .titulo { display: block; font-size: 22px; font-weight: 700; margin-bottom: 16px; color: #efe8d6; }
   #nota pre { margin: 0; font-family: inherit; font-size: 19px; line-height: 1.55; white-space: pre-wrap; }
 
   /* --- panel oculto --- */
@@ -78,7 +89,11 @@
 </head>
 <body>
 
-<div id="velo"><div class="late" id="late"></div></div>
+<div id="velo"><div class="inicio">
+    <div class="sigilo">&#10022;</div>
+    <button id="activar">Activar</button>
+    <div class="late" id="late"></div>
+  </div></div>
 
 <div id="salto"><div class="marca" id="marca"><div class="tri"></div></div>
   <div class="palabra" id="marca-txt"></div>
@@ -101,6 +116,7 @@
   <p>Móvil en espera. Pantalla encendida, sin sonido. Si quieres salir del modo espera, cierra la pestaña.</p>
   <div class="fila" id="pruebas"></div>
   <div class="dato" id="estado">—</div>
+  <div class="dato" id="wake-estado">pantalla: —</div>
   <div class="fila" style="margin-top:18px"><button class="cerrar" id="cerrar">Volver a negro</button></div>
 </div>
 
@@ -123,23 +139,45 @@
 
   /* ---------------- pantalla encendida ---------------- */
   var vigia = $('#vigia');
+  var wl = null, activado = false, relojWake = 0;
+
   function video() {
     try { vigia.play().catch(function () {}); } catch (e) {}
   }
-  var wl = null;
-  async function despierto() {
-    video();
-    try {
-      if ('wakeLock' in navigator) {
-        wl = await navigator.wakeLock.request('screen');
-        wl.addEventListener('release', function () { wl = null; setTimeout(despierto, 900); });
-      }
-    } catch (e) { /* sin wake lock: queda el vídeo */ }
+
+  /* El wake lock SOLO se concede tras un toque real del usuario: por eso
+     se pide dentro del click de Activar y se vuelve a pedir al volver a la
+     pestaña o si el sistema lo suelta. */
+  function pedirWake() {
+    if (!('wakeLock' in navigator)) { diag(); return; }
+    if (wl && !wl.released) { diag(); return; }
+    navigator.wakeLock.request('screen').then(function (s) {
+      wl = s;
+      s.addEventListener('release', function () {
+        wl = null;
+        if (activado && !document.hidden) { clearTimeout(relojWake); relojWake = setTimeout(pedirWake, 400); }
+        diag();
+      });
+      diag();
+    }).catch(function () { diag(); });
   }
+
+  function diag() {
+    var e = $('#wake-estado');
+    if (!e) return;
+    if (!('wakeLock' in navigator)) { e.textContent = 'pantalla: este navegador no permite fijarla'; return; }
+    e.textContent = 'pantalla: ' + (wl && !wl.released ? 'fijada encendida' : 'libre (se dormirá)');
+  }
+
+  function despierto() {
+    video();
+    if (activado) pedirWake();
+  }
+
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden) { despierto(); mirar(); }
   });
-  document.addEventListener('touchstart', function () { video(); }, { passive: true, once: false });
+  document.addEventListener('touchstart', function () { video(); }, { passive: true });
 
   /* ---------------- utilidades ---------------- */
   function sinTildes(t) {
@@ -268,10 +306,10 @@
       var r = await fetch(PUENTE + '/reveal', { cache: 'no-store' });
       var d = await r.json();
       fallos = 0;
-      if (d && d.t && d.t > ultimoReveal) {
+      if (activado && d && d.t && d.t > ultimoReveal) {
         ultimoReveal = d.t;
         localStorage.setItem('r.lt', String(d.t));
-        if (d.item && d.t > arranque) presentar(d);
+        if (d.item) presentar(d);
       }
     } catch (e) { fallos++; if (fallos > 4) $('#late').className = 'late malo'; }
 
@@ -326,7 +364,24 @@
     setTimeout(function () { presentar(demo); }, 250);
   }
 
-  despierto();
+  /* ---------------- arranque: un toque y a escuchar ---------------- */
+  $('#activar').addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (activado) return;
+    activado = true;
+    arranque = Date.now() - 1500;
+    $('#velo').classList.add('arrancado');
+    video();
+    pedirWake();
+    mirar();
+    setTimeout(diag, 300);
+  });
+
+  /* vigilante: si el sistema suelta la pantalla, se vuelve a pedir */
+  setInterval(function () {
+    if (activado && !document.hidden && (!wl || wl.released)) { pedirWake(); diag(); }
+  }, 15000);
+
   mirar();
   setInterval(mirar, 1200);
 
