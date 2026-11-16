@@ -141,29 +141,28 @@
   .cuerpo-nota .titulo.vacio { color: var(--texto-2); }
   #ed-cuerpo { display: block; min-height: 45vh; white-space: pre-wrap; font-size: 20px; line-height: 30px; letter-spacing: -.2px; }
 
-  /* ---------- rejilla de la lista: cada nombre es una fila que se toca ---------- */
-  .rejilla { display: block; margin: 6px 0 0; }
+  /* ---------- lista como check-list de Notas: aro que se rellena al marcar ---------- */
+  .rejilla { display: block; margin: 12px 0 0; }
   .casilla {
-    display: flex; align-items: baseline; gap: 7px; width: 100%; text-align: left;
-    background: none; border: none; border-radius: 0; padding: 2px 0;
+    display: flex; align-items: center; gap: 13px; width: 100%; text-align: left;
+    background: none; border: none; border-radius: 0; padding: 7px 0;
     font: inherit; color: var(--texto);
-    -webkit-tap-highlight-color: transparent; transition: opacity .15s ease;
+    -webkit-tap-highlight-color: transparent;
   }
-  .casilla:active { opacity: .5; background: none; transform: none; }
+  .casilla:active { opacity: .55; background: none; transform: none; }
   .casilla::before {
-    content: "•"; flex: 0 0 auto; color: var(--texto-2);
-    font-size: 9px; line-height: 1;
-  }
-  .casilla .ci {
-    flex: 0 0 auto; width: 26px; font-size: 13px; font-variant-numeric: tabular-nums;
-    color: var(--texto-2); letter-spacing: -.2px;
+    content: ""; flex: 0 0 auto; width: 21px; height: 21px; box-sizing: border-box;
+    border: 1.5px solid #8e8e93; border-radius: 50%; background: transparent center/13px 13px no-repeat;
+    transition: background-color .16s ease, border-color .16s ease;
   }
   .casilla .ct {
-    min-width: 0; font-size: 17px; line-height: 25px; letter-spacing: -.2px;
+    min-width: 0; font-size: 17px; line-height: 23px; letter-spacing: -.2px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .casilla.marcada { background: none; color: var(--texto); }
-  .casilla.marcada::before, .casilla.marcada .ci { color: var(--acento); }
+  .casilla.hecha::before {
+    border-color: #f5c400; background-color: #f5c400;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.1 6.3 4.8 8.9 9.9 3.3' fill='none' stroke='%23111' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
   .pie {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
     display: flex; align-items: center; justify-content: space-between;
@@ -580,12 +579,12 @@
   function abrirLista(clave) {
     const lista = window.LISTAS[clave];
     const items = entradasDe(clave);
+    const hechas = marcasDe(clave);
     notaAbierta = { tipo: 'lista', clave: clave };
     $('#nota-fecha').textContent = fechaLarga(HOY);
     $('#nota-cuerpo').innerHTML = '<span class="titulo">' + escapar(lista.titulo) + '</span>'
       + '<div class="rejilla" id="rejilla">' + items.map(function (t, i) {
-        return '<button class="casilla" data-i="' + i + '">'
-          + '<span class="ci">' + String(i).padStart(2, '0') + '</span>'
+        return '<button class="casilla' + (hechas[i] ? ' hecha' : '') + '" data-i="' + i + '">'
           + '<span class="ct">' + escapar(t) + '</span></button>';
       }).join('') + '</div>';
     mostrarNota();
@@ -600,12 +599,40 @@
     }
   }
 
+  /* Las marcas se quedan puestas, como en la check-list de Notas. */
+  function marcasDe(clave) {
+    try {
+      const todo = JSON.parse(localStorage.getItem('indice.marcas.v1') || '{}') || {};
+      const lista = Array.isArray(todo[clave]) ? todo[clave] : [];
+      const res = {};
+      lista.forEach(function (i) { res[i] = 1; });
+      return res;
+    } catch (e) { return {}; }
+  }
+
+  function guardarMarca(clave, i, puesta) {
+    try {
+      const todo = JSON.parse(localStorage.getItem('indice.marcas.v1') || '{}') || {};
+      const lista = Array.isArray(todo[clave]) ? todo[clave] : [];
+      const pos = lista.indexOf(i);
+      if (puesta && pos < 0) lista.push(i);
+      if (!puesta && pos >= 0) lista.splice(pos, 1);
+      todo[clave] = lista;
+      localStorage.setItem('indice.marcas.v1', JSON.stringify(todo));
+    } catch (e) { /* sin almacén */ }
+  }
+
   /* El espectador marca un nombre en la lista: ese item viaja al puente con su
-     número de posición, y el movil en espera abre su presentador. */
+     número de posición, y el movil en espera abre su presentador. Volver a
+     tocarlo lo desmarca sin avisar de nada. */
   function marcarEnLista(clave, i, boton) {
     const items = entradasDe(clave);
     const item = items[i];
     if (!item) return;
+    const yaEstaba = !!(boton && boton.classList.contains('hecha'));
+    if (boton) boton.classList.toggle('hecha', !yaEstaba);
+    guardarMarca(clave, i, !yaEstaba);
+    if (yaEstaba) return;
     avisarItem({
       item: item,
       lista: (window.LISTAS[clave] || {}).titulo || clave,
@@ -613,10 +640,6 @@
       indice: i,
       numero: numeroEnJuego()
     });
-    if (boton) {
-      boton.classList.add('marcada');
-      setTimeout(function () { boton.classList.remove('marcada'); }, 700);
-    }
   }
 
   /* Avisa al móvil del espectador de qué ítem se está jugando: su calculadora
