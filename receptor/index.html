@@ -331,6 +331,16 @@
 
   function respaldo(url) { location.replace(url); }
 
+  /* La búsqueda se abre en el Google de verdad: la barra del navegador enseña
+     google.com, no nuestra dirección. Se reemplaza la entrada de historial
+     para no dejar rastro de por dónde se pasó. */
+  function googleFotos(q) {
+    fotoQ = q;
+    var u = 'https://www.google.com/search?hl=es&gl=es&tbm=isch&q=' + encodeURIComponent(q);
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    location.replace(u);
+  }
+
   /* Las fotos también se ven dentro: rejilla sobre fondo negro, sin salir.
      Primero la imagen del artículo y después fotos de Wikimedia. */
   var NO_FOTO = /(drawing|sketch|dibujo|croquis|logo|coat[_ ]of[_ ]arms|escudo|stamp|sello|seal|map\b|mapa|signature|firma|poster|cartel|banknote|billete)/i;
@@ -418,7 +428,7 @@
     }
     cerrojo = false;
     var m = destino(lista, d.item);
-    if (m.tipo === 'youtube') abrirVideo(m.q); else abrirFotos(m.q);
+    if (m.tipo === 'youtube') abrirVideo(m.q); else googleFotos(m.q);
   }
 
   /* ---------------- espera ---------------- */
