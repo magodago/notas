@@ -156,6 +156,7 @@
 
   var ultimoReveal = Number(localStorage.getItem('r.lt') || 0);
   var ultimoTexto  = Number(localStorage.getItem('r.lx') || 0);
+  var textoArmado  = false;   // hasta que no se pulsa Activar no se muestra ningún texto
   var arranque = Date.now() - 3000;   // solo se representa lo que llega con la app ya abierta
 
   var visto = 0;
@@ -402,7 +403,7 @@
       var r = await fetch(PUENTE + '/reveal', { cache: 'no-store' });
       var d = await r.json();
       fallos = 0;
-      if (activado && d && d.t && d.t > ultimoReveal) {
+      if (activado && d && d.t && d.t > ultimoReveal && d.t >= arranque) {
         ultimoReveal = d.t;
         localStorage.setItem('r.lt', String(d.t));
         if (d.item) presentar(d);
@@ -412,7 +413,7 @@
     try {
       var r2 = await fetch(PUENTE + '/texto', { cache: 'no-store' });
       var d2 = await r2.json();
-      if (d2 && d2.t && d2.t > ultimoTexto && d2.texto) {
+      if (activado && textoArmado && d2 && d2.t > ultimoTexto && d2.texto) {
         ultimoTexto = d2.t;
         localStorage.setItem('r.lx', String(d2.t));
         pintaNota(d2.texto);
@@ -430,7 +431,15 @@
     relojToques = setTimeout(function () { toques = 0; }, 700);
     if (toques >= 3) { toques = 0; $('#panel').classList.add('on'); }
   });
-  $('#cerrar').addEventListener('click', function () { $('#panel').classList.remove('on'); });
+  /* Cerrar el panel deja la app lista para volver a empezar (Activar visible). */
+  $('#cerrar').addEventListener('click', function () {
+    $('#panel').classList.remove('on');
+    $('#nota').classList.remove('on');
+    $('#carta').classList.remove('on');
+    $('#velo').classList.remove('oculto', 'arrancado');
+    activado = false;
+    textoArmado = false;
+  });
 
   var PRUEBAS = [
     ['Músicos', { lista: 'musicos', item: 'queen' }],
@@ -477,10 +486,22 @@
     } catch (e) {}
   }
 
+  /* Al armar se toma la marca del último texto como línea base: un texto
+     viejo del puente no puede tapar la pantalla de Activar. */
+  function armarTexto() {
+    fetch(PUENTE + '/texto', { cache: 'no-store' }).then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.t) { ultimoTexto = j.t; localStorage.setItem('r.lx', String(j.t)); }
+      })
+      .catch(function () {})
+      .then(function () { textoArmado = true; });
+  }
+
   $('#activar').addEventListener('click', function (e) {
     e.stopPropagation();
     if (activado) return;
     activado = true;
+    armarTexto();
     cebarAudio();
     arranque = Date.now() - 1500;
     $('#velo').classList.add('arrancado');
