@@ -333,12 +333,6 @@
     </div>
     <div class="nota-pie" id="pie-estado"></div>
 
-    <div class="grupo-tit">Aplicaciones</div>
-    <div class="grupo">
-      <button class="g-fila" id="abrir-multiprediccion">Multi predicción <span class="valor">›</span></button>
-    </div>
-    <div class="nota-pie">Abre la app en escucha. Se queda esperando bocabajo y, cuando llega la predicción, la muestra sola.</div>
-
     <div class="grupo-tit">App</div>
     <div class="grupo">
       <button class="g-fila" id="actualizar">Forzar actualización <span class="valor" id="version-app">v4</span></button>
@@ -949,13 +943,6 @@
   }
   $('#btn-nueva').addEventListener('click', nuevaNota);
   $('#btn-nueva2').addEventListener('click', nuevaNota);
-
-  /* Multi predicción: sustituye esta pantalla por la app en escucha, sin dejar
-     rastro del menú en el historial. */
-  $('#abrir-multiprediccion').addEventListener('click', () => {
-    $('#hoja-ajustes').hidden = true;
-    location.replace('receptor/index.html');
-  });
 
   $('#cerrar-ajustes').addEventListener('click', () => {
     $('#hoja-ajustes').hidden = true;
