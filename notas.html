@@ -151,12 +151,17 @@
   }
   .casilla:active { opacity: .55; background: none; transform: none; }
   .casilla::before {
-    content: ""; flex: 0 0 auto; width: 21px; height: 21px; box-sizing: border-box;
+    content: ""; flex: 0 0 auto; width: 21px; height: 21px; box-sizing: border-box; order: 2;
     border: 1.5px solid #8e8e93; border-radius: 50%; background: transparent center/13px 13px no-repeat;
     transition: background-color .16s ease, border-color .16s ease;
   }
+  .casilla .num {
+    order: 1; flex: 0 0 auto; min-width: 25px; margin-right: 9px;
+    font: 400 12px/21px ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #8e8e93; text-align: right; letter-spacing: 0; font-variant-numeric: tabular-nums;
+  }
   .casilla .ct {
-    min-width: 0; font-size: 17px; line-height: 23px; letter-spacing: -.2px;
+    order: 3; min-width: 0; font-size: 17px; line-height: 23px; letter-spacing: -.2px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .casilla.hecha::before {
@@ -585,6 +590,7 @@
     $('#nota-cuerpo').innerHTML = '<span class="titulo">' + escapar(lista.titulo) + '</span>'
       + '<div class="rejilla" id="rejilla">' + items.map(function (t, i) {
         return '<button class="casilla' + (hechas[i] ? ' hecha' : '') + '" data-i="' + i + '">'
+          + '<span class="num">' + String(i).padStart(2, '0') + '</span>'
           + '<span class="ct">' + escapar(t) + '</span></button>';
       }).join('') + '</div>';
     mostrarNota();
