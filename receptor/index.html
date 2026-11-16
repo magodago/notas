@@ -17,7 +17,7 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-user-select: none; user-select: none; touch-action: manipulation; }
   #velo { position: fixed; inset: 0; background: #000; display: flex; align-items: center;
-    justify-content: center; z-index: 50; transition: opacity .35s ease; }
+    justify-content: center; z-index: 80; transition: opacity .35s ease; }
   /* --- arranque --- */
   #velo.oculto { opacity: 0; pointer-events: none; }
   .inicio { display: flex; flex-direction: column; align-items: center; gap: 26px;
@@ -28,6 +28,8 @@
     color: #d9cba3; background: rgba(217,203,163,.06); border: 1px solid rgba(217,203,163,.35);
     padding: 16px 34px; border-radius: 40px; transition: all .3s ease; }
   #activar:active { background: rgba(217,203,163,.16); border-color: rgba(217,203,163,.7); }
+  .ayuda { max-width: 236px; text-align: center; font-size: 12.5px; line-height: 18px;
+    color: #4e4a44; letter-spacing: .02em; }
   .late { width: 7px; height: 7px; border-radius: 50%; background: #1c1c1e; transition: background .6s ease;
     margin-top: 6px; }
   .late.vivo { background: #1f6b3a; }
@@ -92,6 +94,7 @@
 <div id="velo"><div class="inicio">
     <div class="sigilo">&#10022;</div>
     <button id="activar">Activar</button>
+    <div class="ayuda">Deja el móvil así, bocabajo. Se queda despierto y escuchando.</div>
     <div class="late" id="late"></div>
   </div></div>
 
