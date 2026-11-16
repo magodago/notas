@@ -142,25 +142,28 @@
   #ed-cuerpo { display: block; min-height: 45vh; white-space: pre-wrap; font-size: 17px; line-height: 24px; }
 
   /* ---------- rejilla de la lista: cada nombre es una fila que se toca ---------- */
-  .rejilla { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+  .rejilla { display: block; margin: 6px 0 0; }
   .casilla {
-    display: flex; align-items: center; gap: 8px; text-align: left;
-    background: var(--tarjeta); border: none; border-radius: 10px;
-    padding: 9px 10px; font: inherit; color: var(--texto);
-    -webkit-tap-highlight-color: transparent; transition: transform .12s ease, background .12s ease;
+    display: flex; align-items: baseline; gap: 7px; width: 100%; text-align: left;
+    background: none; border: none; border-radius: 0; padding: 2px 0;
+    font: inherit; color: var(--texto);
+    -webkit-tap-highlight-color: transparent; transition: opacity .15s ease;
   }
-  .casilla:active { transform: scale(.97); background: var(--campo); }
-  .casilla.marcada { background: var(--acento); color: #fff; }
-  .casilla.marcada .ci { color: rgba(255, 255, 255, .75); }
+  .casilla:active { opacity: .5; background: none; transform: none; }
+  .casilla::before {
+    content: "•"; flex: 0 0 auto; color: var(--texto-2);
+    font-size: 9px; line-height: 1;
+  }
   .casilla .ci {
-    flex: 0 0 auto; font-size: 11px; font-variant-numeric: tabular-nums;
+    flex: 0 0 auto; width: 26px; font-size: 13px; font-variant-numeric: tabular-nums;
     color: var(--texto-2); letter-spacing: -.2px;
   }
   .casilla .ct {
-    min-width: 0; font-size: 14px; line-height: 17px; letter-spacing: -.2px;
-    overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
-    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    min-width: 0; font-size: 16px; line-height: 23px; letter-spacing: -.2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  .casilla.marcada { background: none; color: var(--texto); }
+  .casilla.marcada::before, .casilla.marcada .ci { color: var(--acento); }
   .pie {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
     display: flex; align-items: center; justify-content: space-between;
@@ -220,16 +223,21 @@
     font-size: 13px; color: var(--texto-2); padding: 10px 32px 0; line-height: 18px;
   }
   .item-sel {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    width: 100%; text-align: left; padding: 11px 16px; position: relative;
-    font-size: 17px; letter-spacing: -.3px;
+    display: flex; align-items: baseline; gap: 7px;
+    width: 100%; text-align: left; padding: 6px 18px; position: relative;
+    font-size: 19px; letter-spacing: -.2px; color: var(--texto);
+    background: none; border: 0; -webkit-tap-highlight-color: transparent;
+    transition: opacity .12s;
   }
-  .item-sel + .item-sel::before {
-    content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--sep);
+  .item-sel:active { opacity: .55; background: none; }
+  .item-sel .punto { flex: 0 0 auto; color: var(--texto-2); font-size: 11px; line-height: 1; }
+  .item-sel .num {
+    flex: 0 0 auto; width: 34px; color: var(--texto-2);
+    font-variant-numeric: tabular-nums; font-size: 17px;
   }
-  .item-sel .num { color: var(--texto-2); font-variant-numeric: tabular-nums; width: 30px; flex: 0 0 auto; }
   .item-sel .txt { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .item-sel .tick { color: var(--acento); font-size: 15px; }
+  .item-sel[data-elegido="1"] .punto { color: var(--acento); }
+  .item-sel[data-elegido="1"] .num { color: var(--acento); }
   .buscador-sel { margin: 0 16px 10px; }
 </style>
 </head>
@@ -766,15 +774,16 @@
     const q = filtroItem.trim().toLowerCase();
     const items = window.LISTAS[clavePicker].items;
     const elegido = cfg.forzados[clavePicker];
-    let html = '<button class="item-sel" data-item=""><span class="num"></span>'
-      + '<span class="txt">Sin forzar</span>'
-      + (elegido ? '' : '<span class="tick">✓</span>') + '</button>';
+    let html = '<button class="item-sel" data-item="" data-elegido="' + (elegido ? 0 : 1) + '">'
+      + '<span class="punto">•</span><span class="num"></span>'
+      + '<span class="txt">Sin forzar</span></button>';
     items.forEach((texto, i) => {
       if (q && !texto.toLowerCase().includes(q)) return;
-      html += '<button class="item-sel" data-item="' + escapar(texto) + '">'
-        + '<span class="num">' + (i + 1) + '</span>'
+      const n = String(i).padStart(2, '0');
+      html += '<button class="item-sel" data-item="' + escapar(texto) + '"'
+        + ' data-elegido="' + (elegido === texto ? 1 : 0) + '">'
+        + '<span class="punto">•</span><span class="num">' + n + '.</span>'
         + '<span class="txt">' + escapar(texto) + '</span>'
-        + (elegido === texto ? '<span class="tick">✓</span>' : '')
         + '</button>';
     });
     $('#lista-items').innerHTML = html;
