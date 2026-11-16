@@ -341,6 +341,14 @@
     location.replace(u);
   }
 
+  /* Igual que las fotos: el tráiler se busca en el YouTube de verdad. */
+  function youtubeReal(q) {
+    fotoQ = String(q || '').replace(/\s+tr[aá]iler.*$/i, '');
+    var u = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    location.replace(u);
+  }
+
   /* Las fotos también se ven dentro: rejilla sobre fondo negro, sin salir.
      Primero la imagen del artículo y después fotos de Wikimedia. */
   var NO_FOTO = /(drawing|sketch|dibujo|croquis|logo|coat[_ ]of[_ ]arms|escudo|stamp|sello|seal|map\b|mapa|signature|firma|poster|cartel|banknote|billete)/i;
@@ -428,7 +436,7 @@
     }
     cerrojo = false;
     var m = destino(lista, d.item);
-    if (m.tipo === 'youtube') abrirVideo(m.q); else googleFotos(m.q);
+    if (m.tipo === 'youtube') youtubeReal(m.q); else googleFotos(m.q);
   }
 
   /* ---------------- espera ---------------- */
