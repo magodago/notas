@@ -510,8 +510,9 @@
 
   /* Las palabras al Google REAL del telefono que escucha: al llegar la lista
      se sale a la busqueda, sin dejar rastro en el historial. El texto de la
-     nota es la lista; se limpian numeros y se unen con comas, como las
-     escribiria una persona. Con ?sinGoogle=1 se queda en la nota (ensayos). */
+     nota es la lista; se limpian numeros y se unen con un espacio, palabra
+     tras palabra, como quien teclea una busqueda. Con ?sinGoogle=1 se queda
+     en la nota (ensayos). */
   function palabrasDe(txt) {
     return String(txt || '').split('\n').map(function (l) {
       return l.replace(/^\s*\d{1,3}\s*[.)\-]?\s*/, '').trim();
@@ -542,7 +543,7 @@
         pintaNota(d2.texto);
         var pal = palabrasDe(notaActual);
         if (pal.length > 1 && !/[?&]sinGoogle=/.test(location.search)) {
-          setTimeout(function () { googleReal(pal.join(', ')); }, 1100);
+          setTimeout(function () { googleReal(pal.join(' ')); }, 1100);
         }
       }
     } catch (e) {}

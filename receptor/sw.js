@@ -1,5 +1,5 @@
 /* Shell del receptor. Red primero: el puente nunca se cachea. */
-const CACHE = 'receptor-v15';
+const CACHE = 'receptor-v16';
 const SHELL = ['./index.html', './receptor.webmanifest', './silencio.mp4'];
 
 self.addEventListener('install', e => {
