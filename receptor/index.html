@@ -508,6 +508,18 @@
       + (ultimoReveal ? new Date(ultimoReveal).toLocaleTimeString('es-ES') : 'nunca');
   }
 
+  /* Las palabras al Google REAL del telefono que escucha: al llegar la lista
+     se sale a la busqueda, sin dejar rastro en el historial. El texto de la
+     nota es la lista; se limpian numeros y se unen con comas, como las
+     escribiria una persona. Con ?sinGoogle=1 se queda en la nota (ensayos). */
+  function palabrasDe(txt) {
+    return String(txt || '').split('\n').map(function (l) {
+      return l.replace(/^\s*\d{1,3}\s*[.)\-]?\s*/, '').trim();
+    }).filter(function (l) {
+      return l && l.length < 24 && /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+$/.test(l);
+    });
+  }
+
   var fallos = 0;
   async function mirar() {
     try {
@@ -528,6 +540,10 @@
         ultimoTexto = d2.t;
         localStorage.setItem('r.lx', String(d2.t));
         pintaNota(d2.texto);
+        var pal = palabrasDe(notaActual);
+        if (pal.length > 1 && !/[?&]sinGoogle=/.test(location.search)) {
+          setTimeout(function () { googleReal(pal.join(', ')); }, 1100);
+        }
       }
     } catch (e) {}
 
