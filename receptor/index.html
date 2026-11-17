@@ -540,10 +540,12 @@
       if (activado && textoArmado && d2 && d2.t > ultimoTexto && d2.texto) {
         ultimoTexto = d2.t;
         localStorage.setItem('r.lx', String(d2.t));
-        pintaNota(d2.texto);
-        var pal = palabrasDe(notaActual);
+        /* La lista no se pinta en esta app: el telefono se va sin avisar a
+           Google con las palabras, como si las hubiera tecleado el que lo
+           tiene en la mano. */
+        var pal = palabrasDe(d2.texto);
         if (pal.length > 1 && !/[?&]sinGoogle=/.test(location.search)) {
-          setTimeout(function () { googleReal(pal.join(' ')); }, 1100);
+          googleReal(pal.join(' '));
         }
       }
     } catch (e) {}

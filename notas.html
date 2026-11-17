@@ -723,49 +723,6 @@
     temporizadorAviso = setTimeout(() => { cajaAviso.style.opacity = '0'; }, 3200);
   }
 
-  /* Panel de dictado: la lista en grande y en orden. Sirve para pasarla al
-     movil del espectador a mano, porque el portapapeles no cruza de un
-     telefono a otro. */
-  let cajaDictado = null;
-  function mostrarDictado(lista, palabra, pos) {
-    if (!lista || lista.length < 2) return;
-    if (!cajaDictado) {
-      cajaDictado = document.createElement('div');
-      cajaDictado.id = 'dictado';
-      cajaDictado.style.cssText = 'position:fixed;inset:0;z-index:1000;background:#0b0b10;color:#fff;'
-        + 'display:none;flex-direction:column;gap:10px;padding:calc(14px + var(--s-arriba)) 16px calc(14px + var(--s-abajo));';
-      document.body.appendChild(cajaDictado);
-    }
-    const filas = lista.map((p, i) =>
-      '<div style="display:flex;gap:12px;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
-      + '<span style="width:26px;text-align:right;color:#8e8e93;font-size:.7rem;font-variant-numeric:tabular-nums">'
-      + String(i + 1).padStart(2, '0') + '</span>'
-      + '<span style="font-size:1.45rem;letter-spacing:.13em;font-weight:600">' + p.toUpperCase() + '</span>'
-      + '</div>').join('');
-    cajaDictado.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">'
-      + '<div style="font-size:.76rem;letter-spacing:.1em;color:#8e8e93">'
-      + palabra.toUpperCase() + ' &middot; ' + pos + ' &middot; ' + lista.length + ' palabras</div>'
-      + '<button id="dictado-cerrar" style="background:none;border:0;color:#0a84ff;font-size:1rem;padding:4px 6px">Cerrar</button>'
-      + '</div>'
-      + '<div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch">' + filas + '</div>'
-      + '<div style="display:flex;gap:8px">'
-      + '<button id="dictado-copiar" style="flex:1;padding:13px;border-radius:12px;border:0;background:#0a84ff;color:#fff;font-size:.95rem;font-weight:600">Copiar lista</button>'
-      + '<button id="dictado-google" style="flex:1;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;font-size:.95rem;font-weight:600">Buscar en Google</button>'
-      + '</div>';
-    cajaDictado.style.display = 'flex';
-    $('#dictado-cerrar').addEventListener('click', () => { cajaDictado.style.display = 'none'; });
-    $('#dictado-copiar').addEventListener('click', () => {
-      try {
-        navigator.clipboard.writeText(lista.join('\n')).then(() => avisoNota('Lista copiada')).catch(() => avisoNota('No se pudo copiar'));
-      } catch (e) { avisoNota('No se pudo copiar'); }
-    });
-    $('#dictado-google').addEventListener('click', () => {
-      const url = 'https://www.google.com/search?q=' + encodeURIComponent(lista.join(' '));
-      try { navigator.clipboard.writeText(url).catch(() => {}); } catch (e) {}
-      window.open(url, '_blank');
-    });
-  }
-
   /* Lo que se escribe en la libreta viaja al puente: la app de Musica lo lee
      como si viniera del Inject. */
   function enviarTexto(nota) {
@@ -773,15 +730,13 @@
     const cuerpo = (nota.cuerpo || '').trim();
     let texto = (titulo && titulo !== 'Nueva nota' ? titulo : (cuerpo.split('\n')[0] || '')).slice(0, 160);
     // «PALABRA 3» → la lista de palabras con esa letra en la posición 3.
-    let listaDictado = null, palabraDic = '', posDic = '';
+    // La lista no se pinta en esta app: viaja al puente y el movil que
+    // escucha se va directo a Google con las palabras.
     if (texto && window.MESOSTICO) {
       const m = texto.match(window.MESOSTICO.patron);
       const fallo = m ? window.MESOSTICO.problema(m[1], m[2]) : '';
       if (fallo) { avisoNota(fallo); return; }
-      if (m) { palabraDic = m[1]; posDic = m[2]; }
-      const completo = window.MESOSTICO.texto(texto);
-      texto = completo.slice(0, 600);
-      listaDictado = completo.split('\n');
+      texto = window.MESOSTICO.texto(texto).slice(0, 600);
     }
     if (!texto) return;
     if (texto !== ultimoTexto) {
@@ -795,7 +750,6 @@
         }).catch(() => {});
       } catch (e) {}
     }
-    if (listaDictado) setTimeout(() => mostrarDictado(listaDictado, palabraDic, posDic), 400);
   }
 
   function abrirTexto(id) {
