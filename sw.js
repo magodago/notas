@@ -1,7 +1,7 @@
 /* Service worker: la app tiene que funcionar en modo avión, en escena.
    HTML: red primero (para recibir cambios), caché como respaldo.
    Resto: caché primero. */
-const CACHE = 'indice-v10';
+const CACHE = 'indice-v11';
 const ARCHIVOS = [
   './notas.html',
   './calculadora.html',
