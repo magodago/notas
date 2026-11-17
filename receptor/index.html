@@ -76,6 +76,9 @@
   #nota .fecha { font-size: 13px; color: #5f5f68; margin-bottom: 14px; }
   #nota .titulo { display: block; font-size: 22px; font-weight: 700; margin-bottom: 16px; color: #efe8d6; }
   #nota pre { margin: 0; font-family: inherit; font-size: 19px; line-height: 1.55; white-space: pre-wrap; }
+  #nota .guardar { display: none; margin-top: 30px; padding: 12px 22px; border-radius: 999px;
+    border: 1px solid #33333c; background: none; color: #a9a294; font: inherit; font-size: 15px; }
+  #nota .guardar.on { display: inline-block; }
 
   /* --- panel oculto --- */
   /* El tráiler y las fotos se ven DENTRO de la app: nunca se sale de ella,
@@ -130,6 +133,7 @@
 <div id="nota"><div class="fecha" id="nota-fecha"></div>
   <span class="titulo" id="nota-titulo">Notas</span>
   <pre id="nota-cuerpo"></pre>
+  <button class="guardar" id="guardar">Guardar en Notas</button>
 </div>
 
 <div id="video"><iframe id="marco" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
@@ -149,6 +153,8 @@
   <source src="silencio.mp4" type="video/mp4">
 </video>
 
+<script src="../mesostico-bank.js"></script>
+<script src="../mesostico.js"></script>
 <script>
 (function () {
   'use strict';
@@ -415,13 +421,64 @@
     }).catch(function () {});
   }
 
+  /* --- mesóstico: «PALABRA 3» se convierte en la lista de palabras ---
+     La palabra que elige el espectador queda escondida en la letra que
+     marca el número (1 = primera letra, 6 = sexta). El relleno sale del
+     banco y siempre es el mismo para la misma palabra: si el móvil
+     recarga, la nota no cambia delante de nadie. */
+  /* El mesóstico lo calcula mesostico.js, compartido con la libreta. */
+  var notaActual = '';
+
+  function textoDeNota(texto) {
+    return (window.MESOSTICO && window.MESOSTICO.texto(texto)) || String(texto || '').trim();
+  }
+
   function pintaNota(texto) {
+    notaActual = textoDeNota(texto);
     $('#nota-fecha').textContent = new Date().toLocaleDateString('es-ES',
       { day: 'numeric', month: 'long', year: 'numeric' });
-    $('#nota-cuerpo').textContent = texto;
+    $('#nota-cuerpo').textContent = notaActual;
+    $('#guardar').textContent = 'Guardar en Notas';
+    $('#guardar').classList.add('on');
     $('#nota').classList.add('on');
     $('#velo').classList.add('oculto');
   }
+
+  /* Guardar en su propio teléfono: la hoja de compartir crea la nota en
+     Notas (iPhone), Keep o la app que tenga. Sin compartir: al portapapeles. */
+  $('#guardar').addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    var boton = this;
+    if (!notaActual) return;
+    function hecho(txt) {
+      boton.textContent = txt;
+      setTimeout(function () { boton.textContent = 'Guardar en Notas'; }, 2400);
+    }
+    /* Copia de emergencia: funciona aunque el navegador niegue el portapapeles. */
+    function copiarClasico() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = notaActual;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        hecho(ok ? 'Copiado' : 'No se pudo');
+      } catch (e) { hecho('No se pudo'); }
+    }
+    if (navigator.share) {
+      navigator.share({ text: notaActual }).then(function () { hecho('Guardada'); })
+        .catch(function () { copiarClasico(); });
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(notaActual).then(function () { hecho('Copiado'); })
+        .catch(copiarClasico);
+    } else {
+      copiarClasico();
+    }
+  });
 
   function presentar(d) {
     if (cerrojo) return;
@@ -569,6 +626,10 @@
   setInterval(function () {
     if (activado && !document.hidden && (!wl || wl.released)) { pedirWake(); diag(); }
   }, 15000);
+
+  /* prueba en el móvil: receptor/?nota=AGUJA%203 */
+  var qNota = new URLSearchParams(location.search).get('nota');
+  if (qNota) pintaNota(qNota);
 
   mirar();
   setInterval(mirar, 1200);

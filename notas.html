@@ -409,6 +409,8 @@
 <script src="listas/musicos.js"></script>
 <script src="listas/videojuegos.js"></script>
 <script src="listas/cartas.js"></script>
+<script src="mesostico-bank.js"></script>
+<script src="mesostico.js"></script>
 <script>
 (function () {
   'use strict';
@@ -703,12 +705,37 @@
   let notaPendiente = null;
   let ultimoTexto = '';
 
+  /* Aviso discreto: solo lo ve el mago en su libreta. */
+  let cajaAviso = null, temporizadorAviso = null;
+  function avisoNota(msg) {
+    if (!cajaAviso) {
+      cajaAviso = document.createElement('div');
+      cajaAviso.id = 'aviso-nota';
+      cajaAviso.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + var(--s-abajo));transform:translateX(-50%);'
+        + 'max-width:min(92vw,420px);padding:10px 16px;border-radius:14px;background:var(--tarjeta);'
+        + 'color:var(--texto);font-size:.9rem;line-height:1.35;text-align:center;'
+        + 'box-shadow:0 8px 30px rgba(0,0,0,.45);z-index:999;opacity:0;transition:opacity .18s;pointer-events:none;';
+      document.body.appendChild(cajaAviso);
+    }
+    cajaAviso.textContent = msg;
+    cajaAviso.style.opacity = '1';
+    clearTimeout(temporizadorAviso);
+    temporizadorAviso = setTimeout(() => { cajaAviso.style.opacity = '0'; }, 3200);
+  }
+
   /* Lo que se escribe en la libreta viaja al puente: la app de Musica lo lee
      como si viniera del Inject. */
   function enviarTexto(nota) {
     const titulo = (nota.titulo || '').trim();
     const cuerpo = (nota.cuerpo || '').trim();
-    const texto = (titulo && titulo !== 'Nueva nota' ? titulo : (cuerpo.split('\n')[0] || '')).slice(0, 160);
+    let texto = (titulo && titulo !== 'Nueva nota' ? titulo : (cuerpo.split('\n')[0] || '')).slice(0, 160);
+    // «PALABRA 3» → la lista de palabras con esa letra en la posición 3.
+    if (texto && window.MESOSTICO) {
+      const m = texto.match(window.MESOSTICO.patron);
+      const fallo = m ? window.MESOSTICO.problema(m[1], m[2]) : '';
+      if (fallo) { avisoNota(fallo); return; }
+      texto = window.MESOSTICO.texto(texto).slice(0, 600);
+    }
     if (!texto || texto === ultimoTexto) return;
     ultimoTexto = texto;
     try {
